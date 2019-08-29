@@ -1,4 +1,3 @@
-
 rule cDNA_capture:
     input:
         mtx = "velocity_quant/{sample}/matrix.ec",
@@ -11,13 +10,13 @@ rule cDNA_capture:
     params:
         out = "velocity_quant/{sample}/cDNA_capture"
     log:
-        out = "logs/cDNA_capture.out",
-        err = "logs/cDNA_capture.err"
+        out = "logs/cDNA_capture_{sample}.out",
+        err = "logs/cDNA_capture_{sample}.err"
     threads: 2
-    conda: CONDA_scRIA_ENV
+    #conda: CONDA_scRIA_ENV
     shell:
-    "bustools capture -s -o {params.out} -c {input.cdna} \
-    -e {input.mtx} -t {input.transcripts} {input.busfile} > {log.out} 2> {log.err}"
+        "bustools capture -s -o {params.out} -c {input.cdna} \
+        -e {input.mtx} -t {input.transcripts} {input.busfile} > {log.out} 2> {log.err}"
 
 rule introns_capture:
     input:
@@ -31,13 +30,13 @@ rule introns_capture:
     params:
         out = "velocity_quant/{sample}/introns_capture"
     log:
-        out = "logs/introns_capture.out",
-        err = "logs/introns_capture.err"
+        out = "logs/introns_capture_{sample}.out",
+        err = "logs/introns_capture_{sample}.err"
     threads: 2
-    conda: CONDA_scRIA_ENV
+    #conda: CONDA_scRIA_ENV
     shell:
-    "bustools capture -s -o {params.out} -c {input.introns} \
-    -e {input.mtx} -t {input.transcripts} {input.busfile} > {log.out} 2> {log.err}"
+        "bustools capture -s -o {params.out} -c {input.introns} \
+        -e {input.mtx} -t {input.transcripts} {input.busfile} > {log.out} 2> {log.err}"
 
 rule spliced_counts:
     input:
@@ -45,16 +44,17 @@ rule spliced_counts:
         mtx = "velocity_quant/{sample}/matrix.ec",
         bus = "velocity_quant/{sample}/cDNA_capture/split.bus",
         transcripts = "velocity_quant/{sample}/transcripts.txt"
-    output:
+    output: "velocity_quant/{sample}/spliced_counts/spliced.mtx"
     params:
-        prefix = "velocity_quant/{sample}/spliced_counts/s"
+        prefix = "velocity_quant/{sample}/spliced_counts/spliced"
     log:
-        out = "logs/spliced_counts.out",
-        err = "logs/spliced_counts.err"
+        out = "logs/spliced_counts_{sample}.out",
+        err = "logs/spliced_counts_{sample}.err"
     threads: 2
-    conda: CONDA_scRIA_ENV
-    shell:  "bustools count -o {params.prefix} -g {input.t2g} -e {input.mtx} \
-    -t {input.transcripts} --genecounts {input.bus} > {log.out} 2> {log.err}"
+    #conda: CONDA_scRIA_ENV
+    shell:
+        "bustools count -o {params.prefix} -g {input.t2g} -e {input.mtx} \
+        -t {input.transcripts} --genecounts {input.bus} > {log.out} 2> {log.err}"
 
 rule unspliced_counts:
     input:
@@ -62,13 +62,14 @@ rule unspliced_counts:
         mtx = "velocity_quant/{sample}/matrix.ec",
         bus = "velocity_quant/{sample}/introns_capture/split.bus",
         transcripts = "velocity_quant/{sample}/transcripts.txt"
-    output:
+    output: "velocity_quant/{sample}/spliced_counts/unspliced.mtx"
     params:
-        prefix = "velocity_quant/{sample}/unspliced_counts/u"
+        prefix = "velocity_quant/{sample}/unspliced_counts/unspliced"
     log:
-        out = "logs/unspliced_counts.out",
-        err = "logs/unspliced_counts.err"
+        out = "logs/unspliced_counts_{sample}.out",
+        err = "logs/unspliced_counts_{sample}.err"
     threads: 2
-    conda: CONDA_scRIA_ENV
-    shell:  "bustools count -o {params.prefix} -g {input.t2g} -e {input.mtx} \
-    -t {input.transcripts} --genecounts {input.bus} > {log.out} 2> {log.err}"
+    #conda: CONDA_scRIA_ENV
+    shell:
+        "bustools count -o {params.prefix} -g {input.t2g} -e {input.mtx} \
+        -t {input.transcripts} --genecounts {input.bus} > {log.out} 2> {log.err}"

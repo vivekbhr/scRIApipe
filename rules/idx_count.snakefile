@@ -23,7 +23,7 @@ rule prep_velocity_files:
         out = "logs/transcript_index.out",
         err = "logs/transcript_index.err"
     threads: 2
-    conda: CONDA_scRIA_ENV
+    #conda: CONDA_scRIA_ENV
     shell: "./velocyto_indexing.R {params.genome} {input} {params.readLength} {params.outdir} > {log.out} 2> {log.err}"
 
 rule transcript_index:
@@ -34,7 +34,7 @@ rule transcript_index:
         out = "logs/transcript_index.out",
         err = "logs/transcript_index.err"
     threads: 2
-    conda: CONDA_scRIA_ENV
+    #conda: CONDA_scRIA_ENV
     shell: "kallisto index -i {output} -k 31 {input} > {log.out} 2> {log.err}"
 
 rule velocity_index:
@@ -46,13 +46,13 @@ rule velocity_index:
         out = "logs/velocity_index.out",
         err = "logs/velocity_index.err"
     threads: 2
-    conda: CONDA_scRIA_ENV
+    #conda: CONDA_scRIA_ENV
     shell: "kallisto index -i {output} -k 31 {input} > {log.out} 2> {log.err}"
 
 rule transcript_map:
     input:
-        R1 = "trimmed_fastq/{sample}_R1.fastq.gz",
-        R2 = "trimmed_fastq/{sample}_R2.fastq.gz",
+        R1 = "FASTQ_trimmed/{sample}"+reads[0]+".fastq.gz" if trim else "FASTQ/{sample}"+reads[0]+".fastq.gz",
+        R2 = "FASTQ_trimmed/{sample}"+reads[1]+".fastq.gz" if trim else "FASTQ/{sample}"+reads[1]+".fastq.gz",
         idx = "annotations/cdna.all.idx"
     output:
         bus = "transcripts_quant/{sample}/output.bus",
@@ -64,14 +64,13 @@ rule transcript_map:
         out = "logs/transcript_map.{sample}.out",
         err = "logs/transcript_map.{sample}.err"
     threads: 2
-    conda: CONDA_scRIA_ENV
-    shell:
-    "kallisto bus -i {input.idx} -x CELSeq -t {threads} -o {params.outdir} {input.R1} {input.R2} > {log.out} 2> {log.err}"
+    #conda: CONDA_scRIA_ENV
+    shell: "kallisto bus -i {input.idx} -x CELSeq -t {threads} -o {params.outdir} {input.R1} {input.R2} > {log.out} 2> {log.err}"
 
 rule velocity_map:
     input:
-        R1 = "trimmed_fastq/{sample}_R1.fastq.gz",
-        R2 = "trimmed_fastq/{sample}_R2.fastq.gz",
+        R1 = "FASTQ_trimmed/{sample}"+reads[0]+".fastq.gz" if trim else "FASTQ/{sample}"+reads[0]+".fastq.gz",
+        R2 = "FASTQ_trimmed/{sample}"+reads[1]+".fastq.gz" if trim else "FASTQ/{sample}"+reads[1]+".fastq.gz",
         idx = "annotations/cDNA_introns.idx"
     output:
         bus = "velocity_quant/{sample}/output.bus",
@@ -83,9 +82,9 @@ rule velocity_map:
         out = "logs/velocity_map.{sample}.out",
         err = "logs/velocity_map.{sample}.err"
     threads: 2
-    conda: CONDA_scRIA_ENV
+    #conda: CONDA_scRIA_ENV
     shell:
-    "kallisto bus -i {input.idx} -x CELSeq -t {threads} -o {params.outdir} {input.R1} {input.R2} > {log.out} 2> {log.err}"
+        "kallisto bus -i {input.idx} -x CELSeq -t {threads} -o {params.outdir} {input.R1} {input.R2} > {log.out} 2> {log.err}"
 
 rule correct_sort:
     input:
@@ -96,7 +95,7 @@ rule correct_sort:
         out = "logs/correct_sort_{sample}.out",
         err = "logs/correct_sort_{sample}.err"
     threads: 2
-    conda: CONDA_scRIA_ENV
+    #conda: CONDA_scRIA_ENV
     shell:
         """
         bustools correct -w {input.whitelist} \
@@ -115,7 +114,7 @@ rule velocyto_correct_sort:
         out = "logs/correct_sort_velocyto_{sample}.out",
         err = "logs/correct_sort_velocyto_{sample}.err"
     threads: 2
-    conda: CONDA_scRIA_ENV
+    #conda: CONDA_scRIA_ENV
     shell:
         """
         bustools correct -w {input.whitelist} \
@@ -136,10 +135,10 @@ rule get_tcc:
     params:
         out = "transcripts_quant/{sample}/eq_counts/tcc"
     log:
-        out = "logs/get_tcc.out",
-        err = "logs/get_tcc.err"
+        out = "logs/get_tcc_{sample}.out",
+        err = "logs/get_tcc_{sample}.err"
     threads: 2
-    conda: CONDA_scRIA_ENV
+    #conda: CONDA_scRIA_ENV
     shell:  "bustools count -o {params.out} -g {input.t2g} -e {input.mtx} -t {input.transcripts} {input.busfile} > {log.out} 2> {log.err}"
 
 rule get_geneCounts:
@@ -154,20 +153,18 @@ rule get_geneCounts:
     params:
         out = "transcripts_quant/{sample}/gene_counts/gene"
     log:
-        out = "logs/get_geneCounts.out",
-        err = "logs/get_geneCounts.err"
+        out = "logs/get_geneCounts_{sample}.out",
+        err = "logs/get_geneCounts_{sample}.err"
     threads: 2
-    conda: CONDA_scRIA_ENV
+    #conda: CONDA_scRIA_ENV
     shell:  "bustools count --genecounts -o {params.out} -g {input.t2g} -e {input.mtx} -t {input.transcripts} {input.busfile} > {log.out} 2> {log.err}"
 
 rule get_counts_txt:
     input:
-        "annotations/cDNA_introns.fa"
+        "transcripts_quant/{sample}/output.correct.sort.bus"
     output:
-        "annotations/cDNA_introns.idx"
-    log:
-        out = "logs/velocity_index.out",
-        err = "logs/velocity_index.err"
+        "transcripts_quant/{sample}/output.txt"
+    log: "logs/get_counts_{sample}.out",
     threads: 2
-    conda: CONDA_scRIA_ENV
-    shell: "kallisto index -i {output} -k 31 {input} > {log.out} 2> {log.err}"
+    #conda: CONDA_scRIA_ENV
+    shell: "bustools text -o {output} {input} > {log}"

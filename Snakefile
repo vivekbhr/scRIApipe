@@ -1,0 +1,87 @@
+import os
+import glob
+import yaml
+### snakemake_workflows initialization ########################################
+maindir = os.path.dirname(os.path.dirname(workflow.basedir))
+#workflow_rscripts=os.path.join(maindir, "shared", "rscripts")
+
+## some internal functions  ###################################################
+def load_configfile(configfile):
+   with open(configfile, "r") as f:
+       config = yaml.load(f, Loader=yaml.FullLoader)
+   return(config)
+
+def get_sample_names(infiles, ext, reads):
+    """
+    Get sample names without file extensions
+    """
+    s = set()
+    lext = len(ext)
+    l0 = len(reads[0])
+    l1 = len(reads[1])
+    for x in infiles:
+        x = os.path.basename(x)[:-lext]
+        if x.endswith(reads[0]):
+            x = x[:-l0]
+        elif x.endswith(reads[1]):
+            x = x[:-l1]
+        else:
+            continue
+        s.add(x)
+    return sorted(list(s))
+
+# load config file
+globals().update(load_configfile(workflow.overwrite_configfile))
+
+## load samples
+infiles = sorted(glob.glob(os.path.join(indir, '*'+ext)))
+samples = get_sample_names(infiles,ext,reads)
+
+### include modules of other snakefiles ########################################
+################################################################################
+include: os.path.join(workflow.basedir, "rules", "fastq.snakefile")
+include: os.path.join(workflow.basedir, "rules", "idx_count.snakefile")
+include: os.path.join(workflow.basedir, "rules", "velocity.snakefile")
+
+### conditional/optional rules #################################################
+################################################################################
+def run_Trimming(trim):
+    if trim:
+        file_list = [
+        expand("FASTQ_trimmed/{sample}"+reads[0]+".fastq.gz", sample = samples),
+        expand("FASTQ_trimmed/FastQC/{sample}"+reads[0]+"_fastqc.html", sample = samples)
+        ]
+        return(file_list)
+    else:
+        return([])
+
+### main rule ##################################################################
+################################################################################
+localrules: FASTQ1, FASTQ2
+rule all:
+    input:
+        run_Trimming(trim),
+        expand("FastQC/{sample}{read}_fastqc.html", sample = samples, read=reads),
+        "annotations/cDNA_introns.fa",
+        "annotations/cDNA_tx_to_capture.txt",
+        "annotations/tr2g.tsv",
+        "annotations/gtf.txdb",
+        "annotations/cdna.all.idx",
+        "annotations/cDNA_introns.idx",
+        expand("transcripts_quant/{sample}/output.correct.sort.bus", sample = samples),
+        expand("velocity_quant/{sample}/output.correct.sort.bus", sample = samples),
+        expand("transcripts_quant/{sample}/eq_counts/tcc.mtx", sample = samples),
+        expand("transcripts_quant/{sample}/gene_counts/tcc.mtx", sample = samples),
+        expand("transcripts_quant/{sample}/output.txt", sample = samples),
+        expand("velocity_quant/{sample}/cDNA_capture/split.bus", sample = samples),
+        expand("velocity_quant/{sample}/introns_capture/split.bus", sample = samples),
+        expand("velocity_quant/{sample}/spliced_counts/spliced.mtx", sample = samples),
+        expand("velocity_quant/{sample}/spliced_counts/unspliced.mtx", sample = samples)
+
+### execute after workflow finished ############################################
+################################################################################
+onsuccess:
+    if "verbose" in config and config["verbose"]:
+        print("\n--- scRIA workflow finished successfully! --------------------------------\n")
+onerror:
+    print("\n !!! ERROR in scRIA workflow! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
