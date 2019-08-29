@@ -5,7 +5,7 @@ ext: '.fastq.gz'
 reads: ["_R1","_R2"]
 downsample: 10000
 trim: True
-trimmerOptions: ""
+trimmerOptions: "-a A{'10'} -a G{'20'} -a C{'20'} -a T{'10'}"
 genome_id: 'mm10'
 barcode_tsv: '/hpc/hub_oudenaarden/vbhardwaj/annotations/celseq2_barcodes.csv'
 input_gtf: '/hpc/hub_oudenaarden/group_references/ensembl/95/mus_musculus/annotations.gtf'

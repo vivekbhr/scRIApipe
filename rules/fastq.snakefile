@@ -32,8 +32,8 @@ if downsample:
             r1 = "FASTQ/{sample}"+reads[0]+".fastq.gz",
             r2 = "FASTQ/{sample}"+reads[1]+".fastq.gz"
         output:
-            r1 = temp("FASTQ/downsample_{sample}"+reads[0]+".fastq.gz"),
-            r2 = temp("FASTQ/downsample_{sample}"+reads[1]+".fastq.gz")
+            r1 = "FASTQ/downsample_{sample}"+reads[0]+".fastq.gz",
+            r2 = "FASTQ/downsample_{sample}"+reads[1]+".fastq.gz"
         params:
             num_reads = downsample
         threads: 10
@@ -58,16 +58,14 @@ if trim:
         log:
             out = "logs/Cutadapt.{sample}.out",
             err = "logs/Cutadapt.{sample}.err"
-        benchmark:
-            "FASTQ_Cutadapt/.benchmark/Cutadapt.{sample}.benchmark"
         threads: 8
         #conda: CONDA_SHARED_ENV
         shell:
             """
             cutadapt -j {threads} -e 0.1 -q 16 -O 3 --trim-n --minimum-length 10 \
             -a AGATCGGAAGAGC -A AGATCGGAAGAGC -u -4 --nextseq-trim=16 \
-            -a A{10} -a G{20} -a C{20} -a T{10} --match-read-wildcards {params.opts} \
-            -o "{output.R1}" "{output.R2}" "{input.R1}" "{input.R2}" > {log.out} 2> {log.err}
+            --match-read-wildcards {params.opts} \
+            -o "{output.R1}" -p "{output.R2}" "{input.R1}" "{input.R2}" > {log.out} 2> {log.err}
             """
 
     rule FastQC_trimmed:
@@ -75,9 +73,11 @@ if trim:
             "FASTQ_trimmed/{sample}"+reads[0]+".fastq.gz"
         output:
             "FASTQ_trimmed/FastQC/{sample}"+reads[0]+"_fastqc.html"
+        params:
+            outdir = "FASTQ_trimmed/FastQC"
         log:
             out = "logs/FastQC_trimmed.{sample}.out",
             err = "logs/FastQC_trimmed.{sample}.err"
         threads: 2
         #conda: CONDA_SHARED_ENV
-        shell: "fastqc -o FastQC {input} > {log.out} 2> {log.err}"
+        shell: "fastqc -o {params.outdir} {input} > {log.out} 2> {log.err}"

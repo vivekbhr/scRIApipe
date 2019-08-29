@@ -6,6 +6,18 @@ gtf <- Args[2] #"../01_annotations/ens95_gene_annotations.gtf"
 readLength <- as.numeric(Args[3])
 outdir <- Args[4] #"../01_annotations/ens95_velocyto_collapse"
 
+## install required packages
+if (!require(devtools)) {
+  install.packages("devtools")
+}
+if (!require(BiocManager)) {
+  install.packages("BiocManager")
+}
+# Install from GitHub
+devtools::install_github("BUStools/BUSpaRse")
+devtools::install_github("satijalab/seurat-wrappers")
+devtools::install_github("velocyto-team/velocyto.R")
+BiocManager::install(c("BSgenome", "GenomicFeatures", "AnnotationDbi", "AnnotationHub", "pcaMethods"))
 
 ## load appropriate bsgenome
 message("Loading genome")
@@ -20,7 +32,7 @@ if(!(isTRUE(g_load))) {
   }
 
 g <- get(g)
-GenomeInfoDb::seqlevelsStyle(g) <- "ensembl" 
+GenomeInfoDb::seqlevelsStyle(g) <- "ensembl"
 
 ## txdb from gtf
 message("Preparing annotations")
@@ -29,8 +41,8 @@ AnnotationDbi::saveDb(gtf.txdb, file.path(outdir, "gtf.txdb"))
 
 ## create velocyto files
 message("Writing velocity files")
-BUSpaRse::get_velocity_files(gtf.txdb, 
-                   L = readLength - 1, 
-                   Genome = g, 
-                   out_path = outdir, 
+BUSpaRse::get_velocity_files(gtf.txdb,
+                   L = readLength - 1,
+                   Genome = g,
+                   out_path = outdir,
                    isoform_action = "collapse")

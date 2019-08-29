@@ -18,13 +18,14 @@ rule prep_velocity_files:
     params:
         genome = genome_id,
         readLength = read_length,
+        script=os.path.join(workflow.basedir, "rules", "velocyto_indexing.R"),
         outdir = "annotations"
     log:
-        out = "logs/transcript_index.out",
-        err = "logs/transcript_index.err"
+        out = "logs/prep_velocyto.out",
+        err = "logs/prep_velocyto.err"
     threads: 2
     #conda: CONDA_scRIA_ENV
-    shell: "./velocyto_indexing.R {params.genome} {input} {params.readLength} {params.outdir} > {log.out} 2> {log.err}"
+    shell: "{params.script} {params.genome} {input} {params.readLength} {params.outdir} > {log.out} 2> {log.err}"
 
 rule transcript_index:
     input: cdna_fasta #"Mus_musculus.GRCm38.cdna.all.fa"
@@ -65,7 +66,7 @@ rule transcript_map:
         err = "logs/transcript_map.{sample}.err"
     threads: 2
     #conda: CONDA_scRIA_ENV
-    shell: "kallisto bus -i {input.idx} -x CELSeq -t {threads} -o {params.outdir} {input.R1} {input.R2} > {log.out} 2> {log.err}"
+    shell: "./kallisto bus -i {input.idx} -x VASASeq -t {threads} -o {params.outdir} {input.R1} {input.R2} > {log.out} 2> {log.err}"
 
 rule velocity_map:
     input:
@@ -84,13 +85,15 @@ rule velocity_map:
     threads: 2
     #conda: CONDA_scRIA_ENV
     shell:
-        "kallisto bus -i {input.idx} -x CELSeq -t {threads} -o {params.outdir} {input.R1} {input.R2} > {log.out} 2> {log.err}"
+        "./kallisto bus -i {input.idx} -x VASASeq -t {threads} -o {params.outdir} {input.R1} {input.R2} > {log.out} 2> {log.err}"
 
 rule correct_sort:
     input:
         whitelist = "whitelist_barcodes.txt",
         busfile = "transcripts_quant/{sample}/output.bus"
     output: "transcripts_quant/{sample}/output.correct.sort.bus"
+    params:
+        outdir = 'transcripts_quant/{sample}'
     log:
         out = "logs/correct_sort_{sample}.out",
         err = "logs/correct_sort_{sample}.err"
@@ -98,10 +101,11 @@ rule correct_sort:
     #conda: CONDA_scRIA_ENV
     shell:
         """
+        mkdir -p {params.outdir};
         bustools correct -w {input.whitelist} \
-        -o transcripts_quant/{sample}/output.correct.bus {input.busfile} > {log.out} 2> {log.err};
-        bustools sort -t 10 -o {output} transcripts_quant/{sample}/output.correct.bus >> {log.out} 2>> {log.err};
-        rm transcripts_quant/{sample}/output.correct.bus
+        -o {params.outdir}/output.correct.bus {input.busfile} > {log.out} 2> {log.err};
+        bustools sort -t 10 -o {output} {params.outdir}/output.correct.bus >> {log.out} 2>> {log.err};
+        rm {params.outdir}/output.correct.bus
         """
 
 rule velocyto_correct_sort:
@@ -110,6 +114,8 @@ rule velocyto_correct_sort:
         busfile = "velocity_quant/{sample}/output.bus"
     output:
         "velocity_quant/{sample}/output.correct.sort.bus"
+    params:
+        outdir = 'velocity_quant/{sample}'
     log:
         out = "logs/correct_sort_velocyto_{sample}.out",
         err = "logs/correct_sort_velocyto_{sample}.err"
@@ -117,10 +123,11 @@ rule velocyto_correct_sort:
     #conda: CONDA_scRIA_ENV
     shell:
         """
-        bustools correct -w {input.whitelist} \
-        -o velocity_quant/{sample}/output.correct.bus {input.busfile} > {log.out} 2> {log.err};
-        bustools sort -t 10 -o {output} velocity_quant/{sample}/output.correct.bus >> {log.out} 2>> {log.err};
-        rm velocity_quant/{sample}/output.correct.bus
+        mkdir -p {params.outdir};
+        bustools correct -w "{input.whitelist}" \
+        -o {params.outdir}/output.correct.bus {input.busfile} > {log.out} 2> {log.err};
+        bustools sort -t 10 -o {output} {params.outdir}/output.correct.bus >> {log.out} 2>> {log.err};
+        rm {params.outdir}/output.correct.bus
         """
 
 rule get_tcc:
