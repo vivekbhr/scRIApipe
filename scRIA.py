@@ -39,6 +39,9 @@ def commonYAMLandLogs(baseDir, args, callingScript):
     config.update(vars(args))  # This allows modifications of args after handling a user config file to still make it to the YAML given to snakemake!
     write_configfile(os.path.join(args.outdir, 'scRID_config.yaml'), config)
 
+    ## load cluster config
+    cluster_config = load_configfile(os.path.join(baseDir, "cluster_config.yaml"))
+
     snakemake_cmd = """
                     PYTHONNOUSERSITE=True snakemake {snakemakeOptions} --directory {workingdir} --snakefile {snakefile} --jobs {maxJobs} --configfile {configFile} --keep-going --latency-wait 60
                     """.format(snakefile=os.path.join(baseDir, "Snakefile"),
@@ -52,8 +55,8 @@ def commonYAMLandLogs(baseDir, args, callingScript):
 
     if args.cluster:
         snakemake_cmd += ["--cluster-config",
-                          os.path.join(args.outdir, args.config),
-                          "--cluster", "'" + config["cluster_cmd"], "'"]
+                          os.path.join(baseDir, "cluster_config.yaml"),
+                          "--cluster", "'" + cluster_config["cluster_cmd"], "'"]
     return " ".join(snakemake_cmd)
 
 def runAndCleanup(args, cmd):

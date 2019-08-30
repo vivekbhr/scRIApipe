@@ -34,7 +34,7 @@ rule transcript_index:
     log:
         out = "logs/transcript_index.out",
         err = "logs/transcript_index.err"
-    threads: 2
+    threads: 1
     #conda: CONDA_scRIA_ENV
     shell: "kallisto index -i {output} -k 31 {input} > {log.out} 2> {log.err}"
 
@@ -46,7 +46,7 @@ rule velocity_index:
     log:
         out = "logs/velocity_index.out",
         err = "logs/velocity_index.err"
-    threads: 2
+    threads: 1
     #conda: CONDA_scRIA_ENV
     shell: "kallisto index -i {output} -k 31 {input} > {log.out} 2> {log.err}"
 
@@ -64,7 +64,7 @@ rule transcript_map:
     log:
         out = "logs/transcript_map.{sample}.out",
         err = "logs/transcript_map.{sample}.err"
-    threads: 2
+    threads: 10
     #conda: CONDA_scRIA_ENV
     shell: "./kallisto bus -i {input.idx} -x VASASeq -t {threads} -o {params.outdir} {input.R1} {input.R2} > {log.out} 2> {log.err}"
 
@@ -82,7 +82,7 @@ rule velocity_map:
     log:
         out = "logs/velocity_map.{sample}.out",
         err = "logs/velocity_map.{sample}.err"
-    threads: 2
+    threads: 10
     #conda: CONDA_scRIA_ENV
     shell:
         "./kallisto bus -i {input.idx} -x VASASeq -t {threads} -o {params.outdir} {input.R1} {input.R2} > {log.out} 2> {log.err}"
@@ -97,14 +97,14 @@ rule correct_sort:
     log:
         out = "logs/correct_sort_{sample}.out",
         err = "logs/correct_sort_{sample}.err"
-    threads: 2
+    threads: 10
     #conda: CONDA_scRIA_ENV
     shell:
         """
         mkdir -p {params.outdir};
         bustools correct -w {input.whitelist} \
         -o {params.outdir}/output.correct.bus {input.busfile} > {log.out} 2> {log.err};
-        bustools sort -t 10 -o {output} {params.outdir}/output.correct.bus >> {log.out} 2>> {log.err};
+        bustools sort -t {threads} -o {output} {params.outdir}/output.correct.bus >> {log.out} 2>> {log.err};
         rm {params.outdir}/output.correct.bus
         """
 
@@ -119,14 +119,14 @@ rule velocyto_correct_sort:
     log:
         out = "logs/correct_sort_velocyto_{sample}.out",
         err = "logs/correct_sort_velocyto_{sample}.err"
-    threads: 2
+    threads: 10
     #conda: CONDA_scRIA_ENV
     shell:
         """
         mkdir -p {params.outdir};
         bustools correct -w "{input.whitelist}" \
         -o {params.outdir}/output.correct.bus {input.busfile} > {log.out} 2> {log.err};
-        bustools sort -t 10 -o {output} {params.outdir}/output.correct.bus >> {log.out} 2>> {log.err};
+        bustools sort -t {threads} -o {output} {params.outdir}/output.correct.bus >> {log.out} 2>> {log.err};
         rm {params.outdir}/output.correct.bus
         """
 
@@ -144,7 +144,7 @@ rule get_tcc:
     log:
         out = "logs/get_tcc_{sample}.out",
         err = "logs/get_tcc_{sample}.err"
-    threads: 2
+    threads: 1
     #conda: CONDA_scRIA_ENV
     shell:  "bustools count -o {params.out} -g {input.t2g} -e {input.mtx} -t {input.transcripts} {input.busfile} > {log.out} 2> {log.err}"
 
@@ -162,7 +162,7 @@ rule get_geneCounts:
     log:
         out = "logs/get_geneCounts_{sample}.out",
         err = "logs/get_geneCounts_{sample}.err"
-    threads: 2
+    threads: 1
     #conda: CONDA_scRIA_ENV
     shell:  "bustools count --genecounts -o {params.out} -g {input.t2g} -e {input.mtx} -t {input.transcripts} {input.busfile} > {log.out} 2> {log.err}"
 
@@ -172,6 +172,6 @@ rule get_counts_txt:
     output:
         "transcripts_quant/{sample}/output.txt"
     log: "logs/get_counts_{sample}.out",
-    threads: 2
+    threads: 1
     #conda: CONDA_scRIA_ENV
     shell: "bustools text -o {output} {input} > {log}"

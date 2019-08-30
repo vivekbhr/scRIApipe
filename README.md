@@ -1,2 +1,7 @@
 # scRIApipe
-single-cell RNA Isoform Analysis Pipeline
+
+single-cell **R**NA **I**soform **A**nalysis **Pipe**line
+
+**Author: @vivekbhr**
+
+## 
