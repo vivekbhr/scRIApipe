@@ -75,8 +75,8 @@ if trim:
         params:
             outdir = "FASTQ_trimmed/FastQC"
         log:
-            out = "logs/FastQC_trimmed.{sample}.out",
-            err = "logs/FastQC_trimmed.{sample}.err"
+            out = "logs/FastQC_trimmed.{sample}{read}.out",
+            err = "logs/FastQC_trimmed.{sample}{read}.err"
         threads: 2
         #conda: CONDA_SHARED_ENV
         shell: "fastqc -o {params.outdir} {input} > {log.out} 2> {log.err}"
