@@ -48,8 +48,8 @@ include: os.path.join(workflow.basedir, "rules", "velocity.snakefile")
 def run_Trimming(trim):
     if trim:
         file_list = [
-        expand("FASTQ_trimmed/{sample}"+reads[0]+".fastq.gz", sample = samples),
-        expand("FASTQ_trimmed/FastQC/{sample}"+reads[0]+"_fastqc.html", sample = samples)
+        expand("FASTQ_trimmed/{sample}{read}.fastq.gz", sample = samples, read = reads),
+        expand("FASTQ_trimmed/FastQC/{sample}{read}_fastqc.html", sample = samples, read = reads)
         ]
         return(file_list)
     else:

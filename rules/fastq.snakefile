@@ -70,9 +70,9 @@ if trim:
 
     rule FastQC_trimmed:
         input:
-            "FASTQ_trimmed/{sample}"+reads[0]+".fastq.gz"
+            "FASTQ_trimmed/{sample}{read}.fastq.gz"
         output:
-            "FASTQ_trimmed/FastQC/{sample}"+reads[0]+"_fastqc.html"
+            "FASTQ_trimmed/FastQC/{sample}{read}_fastqc.html"
         params:
             outdir = "FASTQ_trimmed/FastQC"
         log:
