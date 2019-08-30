@@ -14,10 +14,11 @@ if (!require(BiocManager)) {
   install.packages("BiocManager")
 }
 # Install from GitHub
-devtools::install_github("BUStools/BUSpaRse")
-devtools::install_github("satijalab/seurat-wrappers")
-devtools::install_github("velocyto-team/velocyto.R")
-BiocManager::install(c("BSgenome", "GenomicFeatures", "AnnotationDbi", "AnnotationHub", "pcaMethods"))
+#BiocManager::install(c("BSgenome", "GenomicFeatures", "AnnotationDbi", "AnnotationHub", "pcaMethods"))
+#devtools::install_github("BUStools/BUSpaRse")
+#devtools::install_github("satijalab/seurat-wrappers")
+#devtools::install_github("velocyto-team/velocyto.R")
+
 
 ## load appropriate bsgenome
 message("Loading genome")
@@ -26,11 +27,12 @@ g <- grep(genome, avail_genomes, value = TRUE)
 g <- grep("masked", g, invert = TRUE, value = TRUE)
 
 g_load <- suppressWarnings(require(g, character.only = TRUE))
+
 if(!(isTRUE(g_load))) {
   BiocManager::install(g, update = FALSE)
   require(g, character.only = TRUE)
   }
-
+#library(g)
 g <- get(g)
 GenomeInfoDb::seqlevelsStyle(g) <- "ensembl"
 

@@ -40,7 +40,7 @@ def commonYAMLandLogs(baseDir, args, callingScript):
     write_configfile(os.path.join(args.outdir, 'scRID_config.yaml'), config)
 
     snakemake_cmd = """
-                    PYTHONNOUSERSITE=True snakemake {snakemakeOptions} --directory {workingdir} --snakefile {snakefile} --jobs {maxJobs} --configfile {configFile} --keep-going
+                    PYTHONNOUSERSITE=True snakemake {snakemakeOptions} --directory {workingdir} --snakefile {snakefile} --jobs {maxJobs} --configfile {configFile} --keep-going --latency-wait 60
                     """.format(snakefile=os.path.join(baseDir, "Snakefile"),
                                maxJobs=args.maxJobs,
                                workingdir=args.outdir,

@@ -3,7 +3,7 @@
 ext: '.fastq.gz'
 ## paired-end read name extension (default: ["_R1", "_R2"])
 reads: ["_R1","_R2"]
-downsample: 10000
+downsample:
 trim: True
 trimmerOptions: "-a A{'10'} -a G{'20'} -a C{'20'} -a T{'10'}"
 genome_id: 'mm10'
