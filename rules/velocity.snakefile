@@ -62,7 +62,7 @@ rule unspliced_counts:
         mtx = "velocity_quant/{sample}/matrix.ec",
         bus = "velocity_quant/{sample}/introns_capture/split.bus",
         transcripts = "velocity_quant/{sample}/transcripts.txt"
-    output: "velocity_quant/{sample}/spliced_counts/unspliced.mtx"
+    output: "velocity_quant/{sample}/unspliced_counts/unspliced.mtx"
     params:
         prefix = "velocity_quant/{sample}/unspliced_counts/unspliced"
     log:

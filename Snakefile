@@ -71,12 +71,12 @@ rule all:
         expand("transcripts_quant/{sample}/output.correct.sort.bus", sample = samples),
         expand("velocity_quant/{sample}/output.correct.sort.bus", sample = samples),
         expand("transcripts_quant/{sample}/eq_counts/tcc.mtx", sample = samples),
-        expand("transcripts_quant/{sample}/gene_counts/tcc.mtx", sample = samples),
+        expand("transcripts_quant/{sample}/gene_counts/gene.mtx", sample = samples),
         expand("transcripts_quant/{sample}/output.txt", sample = samples),
         expand("velocity_quant/{sample}/cDNA_capture/split.bus", sample = samples),
         expand("velocity_quant/{sample}/introns_capture/split.bus", sample = samples),
         expand("velocity_quant/{sample}/spliced_counts/spliced.mtx", sample = samples),
-        expand("velocity_quant/{sample}/spliced_counts/unspliced.mtx", sample = samples)
+        expand("velocity_quant/{sample}/unspliced_counts/unspliced.mtx", sample = samples)
 
 ### execute after workflow finished ############################################
 ################################################################################

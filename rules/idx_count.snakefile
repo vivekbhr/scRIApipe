@@ -155,8 +155,7 @@ rule get_geneCounts:
         transcripts = "annotations/cDNA_tx_to_capture.txt",
         busfile = "transcripts_quant/{sample}/output.correct.sort.bus"
     output:
-         mtx = "transcripts_quant/{sample}/gene_counts/tcc.mtx",
-         txt = "transcripts_quant/{sample}/gene_counts/tcc.ec.txt"
+         mtx = "transcripts_quant/{sample}/gene_counts/gene.mtx"
     params:
         out = "transcripts_quant/{sample}/gene_counts/gene"
     log:
