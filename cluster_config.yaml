@@ -4,10 +4,14 @@ latency_wait: 300
 cluster_logDir: cluster_logs
 __default__:
     memory: 10G
+transcript_map:
+    memory: 20G
+velocity_map:
+    memory: 20G
 transcript_index:
     memory: 30G
 velocity_index:
-    memory: 30G
+    memory: 80G
 get_tcc:
     memory: 30G
 get_geneCounts:
