@@ -16,14 +16,14 @@ git clone https://github.com/vivekbhr/scRIApipe.git
 
 ```
 cd scRIApipe
-conda create env -f env.yaml -n scria
+conda env create -f env.yaml -n scria
 ```
 
 3. configure the config.yaml
 
 The workflow needs 1) path to a cDNA fasta file 2) path to a GTF file 3) UCSC ID of the genome
 
-cDNA fasta and GTF can be downloaded (here)[https://www.ensembl.org/info/data/ftp/index.html]
+cDNA fasta and GTF can be downloaded [here](https://www.ensembl.org/info/data/ftp/index.html)
 UCSC ID is, for example "mm10" (mouse) or "hg38" (human)
 
 4. Test kallisto binary
