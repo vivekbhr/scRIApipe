@@ -80,8 +80,10 @@ summary(tot_count)
 ```
 
 ```{r filterbarcodes, echo = FALSE, eval = TRUE}
-sf_barcodeRanks <- getRanks(sf, uf)
-barcodes_touse <- colnames(sf)[tot_count > metadata(sf_barcodeRanks)$inflection]
+## not printing barcode ranks for now, (getRanks)
+## this is because this shit doesn't return the metadata if executed from Rmd
+sf_barcodeRanks <- DropletUtils::barcodeRanks(sf)
+barcodes_touse <- colnames(sf)[tot_count > sf_barcodeRanks$inflection]
 
 # Remove genes that aren't detected
 tot_genes <- Matrix::rowSums(sf)
