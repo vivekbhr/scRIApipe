@@ -68,6 +68,7 @@ rule all:
         "annotations/gtf.txdb",
         "annotations/cdna.all.idx",
         "annotations/cDNA_introns.idx",
+        "velocity_report.html",
         expand("transcripts_quant/{sample}/output.correct.sort.bus", sample = samples),
         expand("velocity_quant/{sample}/output.correct.sort.bus", sample = samples),
         expand("transcripts_quant/{sample}/eq_counts/tcc.mtx", sample = samples),

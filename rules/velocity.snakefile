@@ -73,3 +73,21 @@ rule unspliced_counts:
     shell:
         "bustools count -o {params.prefix} -g {input.t2g} -e {input.mtx} \
         -t {input.transcripts} --genecounts {input.bus} > {log.out} 2> {log.err}"
+
+rule velocyto:
+    input:
+        unspliced = "velocity_quant/{sample}/unspliced_counts/unspliced.mtx",
+        spliced = "velocity_quant/{sample}/unspliced_counts/spliced.mtx"
+    output:
+        report = "velocity_report.html",
+        seu = "velocity_seuratObject.Rds"
+    params:
+        rscript = os.path.join(workflow.basedir, "tools", "velocity_report.R"),
+        rmd = os.path.join(workflow.basedir, "tools", "velocity_report.Rmd")
+    log:
+        out = "logs/unspliced_counts_{sample}.out",
+        err = "logs/unspliced_counts_{sample}.err"
+    threads: 2
+    #conda: CONDA_scRIA_ENV
+    shell:
+        "cat {params.rscript} | R --vanilla --quiet --args {params.rmd} > {log.out} 2> {log.err}"
