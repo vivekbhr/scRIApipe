@@ -8,7 +8,7 @@ rmdTemplate <- args[1]
 
 library(magrittr)
 library(BUSpaRse)
-#library(velocyto.R)
+library(velocyto.R)
 library(Seurat)
 ## data transformation
 library(ggplot2)

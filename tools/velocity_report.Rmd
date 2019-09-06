@@ -55,7 +55,13 @@ all_data <- lapply(dirs, function(dir) {
   return(dat)
   })
 names(all_data) <- dirs
-
+all_data <- lapply(all_data, function(x) {
+  x$spliced <- x$spliced[,colnames(x$spliced) %in% colnames(x$unspliced)]
+  x$unspliced <- x$unspliced[,colnames(x$unspliced) %in% colnames(x$spliced)]
+  return(x)
+})
+colnums <- sapply(all_data, function(x) ncol(x$spliced), simplify = TRUE)
+colnums <- min(colnums)
 lapply(all_data, function(x) sum(x$unspliced@x) / (sum(x$unspliced@x) + sum(x$spliced@x)))
 ```
 
@@ -63,7 +69,7 @@ lapply(all_data, function(x) sum(x$unspliced@x) / (sum(x$unspliced@x) + sum(x$sp
 ```{r mergeMatrix, echo = FALSE, eval = TRUE}
 sf <- lapply(all_data, function(x) return(x$spliced)) %>% Reduce(cbind, .)
 uf <- lapply(all_data, function(x) return(x$unspliced)) %>% Reduce(cbind, .)
-prefix <- rep(dirs, each = 384)
+prefix <- rep(dirs, each = colnums)
 
 colnames(sf) %<>% paste(prefix, . , sep = "_")
 colnames(uf) %<>% paste(prefix, . , sep = "_")
@@ -102,7 +108,7 @@ seu <- AddMetaData(seu, gsub("(.*)_[A-Z]*", "\\1", colnames(seu)),
 cols_use <- c("nCount_sf", "nFeature_sf", "nCount_uf", "nFeature_uf")
 
 #pdf("Vlnplot_normCounts_spliced.pdf", width = 6, height = 12)
-VlnPlot(seu, cols_use, pt.size = 0.1, ncol = 1, group.by = "cell_type")
+VlnPlot(seu, cols_use, pt.size = 0.1, ncol = 1, group.by = "sample")
 #dev.off()
 ```
 
@@ -116,7 +122,7 @@ ElbowPlot(seu, ndims = 70)
 
 ```{r pca, echo = FALSE, eval = TRUE}
 DimPlot(seu, reduction = "pca",
-        group.by = "cell_type", pt.size = 0.5, label = TRUE, repel = TRUE) +
+        group.by = "sample", pt.size = 0.5, label = TRUE, repel = TRUE) +
   scale_color_brewer(type = "qual", palette = "Set2")
 ```
 
@@ -127,7 +133,7 @@ um <- umap(Embeddings(seu, reduction = "pca")[, 1:50], init = "random")
 rownames(um) <- colnames(sf)
 colnames(um) <- c("UMAP_1", "UMAP_2")
 seu[["umap"]] <- CreateDimReducObject(embeddings = um, assay = "spliced", key = "umap_")
-DimPlot(seu, reduction = "umap", group.by = "cell_type",
+DimPlot(seu, reduction = "umap", group.by = "sample",
         pt.size = 0.5, label = TRUE, repel = TRUE) +
         scale_color_brewer(type = "qual", palette = "Set2")
 ```
@@ -144,7 +150,7 @@ DimPlot(seu, pt.size = 0.5, reduction = "umap")
 ```{r}
 #pdf("umap_louvain_spliced.pdf", width = 8, height = 6, onefile = FALSE)
 DimPlot(seu, reduction = "umap",
-        group.by = "cell_type", pt.size = 0.5, label = TRUE, repel = TRUE) +
+        group.by = "sample", pt.size = 0.5, label = TRUE, repel = TRUE) +
   scale_color_brewer(type = "qual", palette = "Set2")
 #dev.off()
 ```
@@ -158,7 +164,7 @@ cell_pal <- function(cell_cats, pal_fun) {
   pal[cell_cats]
 }
 
-cell_colors <- cell_pal(seu$cell_type, scales::brewer_pal("qual", "Set2"))
+cell_colors <- cell_pal(seu$sample, scales::brewer_pal("qual", "Set2"))
 cell_colors_clust <- cell_pal(seu$seurat_clusters, scales::hue_pal())
 names(cell_colors) <- names(cell_colors_clust) <- colnames(sf)
 
