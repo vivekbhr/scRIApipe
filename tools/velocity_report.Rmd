@@ -157,7 +157,7 @@ DimPlot(seu, reduction = "umap",
 
 
 ```{r velocity, echo = FALSE, eval = TRUE}
-seu <- RunVelocity(seu, ncores = 10, reduction = "pca", verbose = FALSE)
+seu <- RunVelocity(seu, ncores = 10, reduction = "umap", verbose = FALSE)
 cell_pal <- function(cell_cats, pal_fun) {
   categories <- sort(unique(cell_cats))
   pal <- setNames(pal_fun(length(categories)), categories)
