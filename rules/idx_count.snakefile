@@ -31,24 +31,28 @@ rule transcript_index:
     input: cdna_fasta #"Mus_musculus.GRCm38.cdna.all.fa"
     output:
         "annotations/cdna.all.idx"
+    params:
+        kallisto = os.path.join(workflow.basedir, "tools", "kallisto")
     log:
         out = "logs/transcript_index.out",
         err = "logs/transcript_index.err"
     threads: 1
     #conda: CONDA_scRIA_ENV
-    shell: "kallisto index -i {output} -k 31 {input} > {log.out} 2> {log.err}"
+    shell: "{params.kallisto} index -i {output} -k 31 {input} > {log.out} 2> {log.err}"
 
 rule velocity_index:
     input:
         "annotations/cDNA_introns.fa"
     output:
         "annotations/cDNA_introns.idx"
+    params:
+        kallisto = os.path.join(workflow.basedir, "tools", "kallisto")
     log:
         out = "logs/velocity_index.out",
         err = "logs/velocity_index.err"
     threads: 1
     #conda: CONDA_scRIA_ENV
-    shell: "kallisto index -i {output} -k 31 {input} > {log.out} 2> {log.err}"
+    shell: "{params.kallisto} index -i {output} -k 31 {input} > {log.out} 2> {log.err}"
 
 rule transcript_map:
     input:
@@ -60,13 +64,14 @@ rule transcript_map:
         matrix = "transcripts_quant/{sample}/matrix.ec",
         transcripts = "transcripts_quant/{sample}/transcripts.txt"
     params:
-        outdir = "transcripts_quant/{sample}"
+        outdir = "transcripts_quant/{sample}",
+        kallisto = os.path.join(workflow.basedir, "tools", "kallisto")
     log:
         out = "logs/transcript_map.{sample}.out",
         err = "logs/transcript_map.{sample}.err"
     threads: 10
     #conda: CONDA_scRIA_ENV
-    shell: "./kallisto bus -i {input.idx} -x VASASeq -t {threads} -o {params.outdir} {input.R1} {input.R2} > {log.out} 2> {log.err}"
+    shell: "{params.kallisto} bus -i {input.idx} -x VASASeq -t {threads} -o {params.outdir} {input.R1} {input.R2} > {log.out} 2> {log.err}"
 
 rule velocity_map:
     input:
@@ -78,14 +83,15 @@ rule velocity_map:
         matrix = "velocity_quant/{sample}/matrix.ec",
         transcripts = "velocity_quant/{sample}/transcripts.txt"
     params:
-        outdir = "velocity_quant/{sample}"
+        outdir = "velocity_quant/{sample}",
+        kallisto = os.path.join(workflow.basedir, "tools", "kallisto")
     log:
         out = "logs/velocity_map.{sample}.out",
         err = "logs/velocity_map.{sample}.err"
     threads: 10
     #conda: CONDA_scRIA_ENV
     shell:
-        "./kallisto bus -i {input.idx} -x VASASeq -t {threads} -o {params.outdir} {input.R1} {input.R2} > {log.out} 2> {log.err}"
+        "{params.kallisto} bus -i {input.idx} -x VASASeq -t {threads} -o {params.outdir} {input.R1} {input.R2} > {log.out} 2> {log.err}"
 
 rule correct_sort:
     input:

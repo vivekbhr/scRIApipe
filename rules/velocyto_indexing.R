@@ -14,10 +14,10 @@ if (!require(BiocManager)) {
   install.packages("BiocManager")
 }
 # Install from GitHub
-#BiocManager::install(c("BSgenome", "GenomicFeatures", "AnnotationDbi", "AnnotationHub", "pcaMethods"))
-#devtools::install_github("BUStools/BUSpaRse")
-#devtools::install_github("satijalab/seurat-wrappers")
-#devtools::install_github("velocyto-team/velocyto.R")
+BiocManager::install(c("BSgenome", "GenomicFeatures", "AnnotationDbi", "AnnotationHub", "pcaMethods"))
+devtools::install_github("BUStools/BUSpaRse")
+devtools::install_github("satijalab/seurat-wrappers")
+devtools::install_github("velocyto-team/velocyto.R")
 
 
 ## load appropriate bsgenome
