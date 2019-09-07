@@ -85,8 +85,8 @@ rule velocyto:
         rscript = os.path.join(workflow.basedir, "tools", "velocity_report.R"),
         rmd = os.path.join(workflow.basedir, "tools", "velocity_report.Rmd")
     log:
-        out = "logs/unspliced_counts_{sample}.out",
-        err = "logs/unspliced_counts_{sample}.err"
+        out = "logs/velocity_report.out",
+        err = "logs/velocity_report.err"
     threads: 2
     #conda: CONDA_scRIA_ENV
     shell:
