@@ -21,10 +21,15 @@ conda env create -f env.yaml -n scria
 
 3. configure the config.yaml
 
-The workflow needs 1) path to a cDNA fasta file 2) path to a GTF file 3) UCSC ID of the genome
+The workflow needs
+1) path to a cDNA fasta file
+2) path to a GTF file
+3) UCSC ID of the genome
 
 cDNA fasta and GTF can be downloaded [here](https://www.ensembl.org/info/data/ftp/index.html)
 UCSC ID is, for example "mm10" (mouse) or "hg38" (human)
+
+Copy the config.yaml from the folder to your output folder (where you intend to run the pipeline) and replace the information with your relevant information.
 
 4. Test kallisto binary
 
@@ -52,7 +57,7 @@ cp kallisto <scRIApipe>/tools/
 
 ```
 conda activate scria
-<scRIApipe_folder>/scRIA -i fastq_folder -o output_folder -c config.yaml -j <jobs> -cl
+<scRIApipe_folder>/scRIA -i fastq_folder -o output_folder -c <your>config.yaml -j <jobs> -cl
 ```
 
 here **j** is the number of parallel josb you want to run, **-cl** means submit to cluster (default is to run locally)
