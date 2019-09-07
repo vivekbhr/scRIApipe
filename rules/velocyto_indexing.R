@@ -24,7 +24,7 @@ devtools::install_github("satijalab/seurat-wrappers")
 }
 if (!require(velocyto)) {
 devtools::install_github("velocyto-team/velocyto.R")
-}s
+}
 
 
 ## load appropriate bsgenome
