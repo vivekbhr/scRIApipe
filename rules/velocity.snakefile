@@ -76,8 +76,8 @@ rule unspliced_counts:
 
 rule velocyto:
     input:
-        unspliced = "velocity_quant/{sample}/unspliced_counts/unspliced.mtx",
-        spliced = "velocity_quant/{sample}/unspliced_counts/spliced.mtx"
+        unspliced = expand("velocity_quant/{sample}/unspliced_counts/unspliced.mtx", sample = samples),
+        spliced = expand("velocity_quant/{sample}/unspliced_counts/spliced.mtx", sample = samples)
     output:
         report = "velocity_report.html",
         seu = "velocity_seuratObject.Rds"
