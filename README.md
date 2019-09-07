@@ -57,7 +57,7 @@ conda activate scria
 
 here **j** is the number of parallel josb you want to run, **-cl** means submit to cluster (default is to run locally)
 
-**LOG** file are stored in the /log/ directory and the workflow top-level log is in log.txt file.
+After running the pipeline, **LOG** file are stored in the /log/ directory and the workflow top-level log is in scRIA.log file.
 
 **NOTE: memory errors**
 Index builing needs >40G of memory, if the workflow fails and the *logs/velocity_index.err* says something like `std::badalloc`, increase memory in the file `cluster_config.yaml` in the scRIA folder.
