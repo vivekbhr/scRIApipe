@@ -78,9 +78,7 @@ rule velocyto:
     input:
         unspliced = expand("velocity_quant/{sample}/unspliced_counts/unspliced.mtx", sample = samples),
         spliced = expand("velocity_quant/{sample}/spliced_counts/spliced.mtx", sample = samples)
-    output:
-        report = "velocity_report.html",
-        seu = "velocity_seuratObject.Rds"
+    output: "velocity_report.html"
     params:
         rscript = os.path.join(workflow.basedir, "tools", "velocity_report.R"),
         rmd = os.path.join(workflow.basedir, "tools", "velocity_report.Rmd")

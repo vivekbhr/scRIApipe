@@ -68,7 +68,6 @@ rule all:
         "annotations/gtf.txdb",
         "annotations/cdna.all.idx",
         "annotations/cDNA_introns.idx",
-        "velocity_report.html",
         expand("transcripts_quant/{sample}/output.correct.sort.bus", sample = samples),
         expand("velocity_quant/{sample}/output.correct.sort.bus", sample = samples),
         expand("transcripts_quant/{sample}/eq_counts/tcc.mtx", sample = samples),
@@ -77,7 +76,8 @@ rule all:
         expand("velocity_quant/{sample}/cDNA_capture/split.bus", sample = samples),
         expand("velocity_quant/{sample}/introns_capture/split.bus", sample = samples),
         expand("velocity_quant/{sample}/spliced_counts/spliced.mtx", sample = samples),
-        expand("velocity_quant/{sample}/unspliced_counts/unspliced.mtx", sample = samples)
+        expand("velocity_quant/{sample}/unspliced_counts/unspliced.mtx", sample = samples),
+        "velocity_report.html"
 
 ### execute after workflow finished ############################################
 ################################################################################
