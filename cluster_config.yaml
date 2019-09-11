@@ -3,16 +3,16 @@ cluster_cmd: 'qsub -cwd -j y -pe threaded {threads} -l h_vmem={cluster.memory},h
 latency_wait: 300
 cluster_logDir: cluster_logs
 __default__:
-    memory: 10G
+    memory: 20G
 transcript_map:
-    memory: 20G
+    memory: 40G
 velocity_map:
-    memory: 20G
+    memory: 40G
 transcript_index:
-    memory: 30G
+    memory: 80G
 velocity_index:
     memory: 80G
 get_tcc:
-    memory: 30G
+    memory: 40G
 get_geneCounts:
-    memory: 30G
+    memory: 40G

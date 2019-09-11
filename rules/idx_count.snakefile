@@ -140,7 +140,7 @@ rule get_tcc:
     input:
         t2g = "annotations/tr2g.tsv",
         mtx = "transcripts_quant/{sample}/matrix.ec",
-        transcripts = "annotations/cDNA_tx_to_capture.txt",
+        transcripts = "transcripts_quant/{sample}/transcripts.txt",
         busfile = "transcripts_quant/{sample}/output.correct.sort.bus"
     output:
          mtx = "transcripts_quant/{sample}/eq_counts/tcc.mtx",
@@ -158,7 +158,7 @@ rule get_geneCounts:
     input:
         t2g = "annotations/tr2g.tsv",
         mtx = "transcripts_quant/{sample}/matrix.ec",
-        transcripts = "annotations/cDNA_tx_to_capture.txt",
+        transcripts = "transcripts_quant/{sample}/transcripts.txt",
         busfile = "transcripts_quant/{sample}/output.correct.sort.bus"
     output:
          mtx = "transcripts_quant/{sample}/gene_counts/gene.mtx"
