@@ -76,17 +76,15 @@ rule unspliced_counts:
 
 rule velocyto:
     input:
-        unspliced = "velocity_quant/{sample}/unspliced_counts/unspliced.mtx",
-        spliced = "velocity_quant/{sample}/unspliced_counts/spliced.mtx"
-    output:
-        report = "velocity_report.html",
-        seu = "velocity_seuratObject.Rds"
+        unspliced = expand("velocity_quant/{sample}/unspliced_counts/unspliced.mtx", sample = samples),
+        spliced = expand("velocity_quant/{sample}/spliced_counts/spliced.mtx", sample = samples)
+    output: "velocity_report.html"
     params:
         rscript = os.path.join(workflow.basedir, "tools", "velocity_report.R"),
         rmd = os.path.join(workflow.basedir, "tools", "velocity_report.Rmd")
     log:
-        out = "logs/unspliced_counts_{sample}.out",
-        err = "logs/unspliced_counts_{sample}.err"
+        out = "logs/velocity_report.out",
+        err = "logs/velocity_report.err"
     threads: 2
     #conda: CONDA_scRIA_ENV
     shell:
