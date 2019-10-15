@@ -33,6 +33,8 @@ def get_sample_names(infiles, ext, reads):
         s.add(x)
     return sorted(list(s))
 
+# update envs
+globals().update(set_condaEnv())
 # load config file
 globals().update(load_configfile(workflow.overwrite_configfiles[0]))
 
