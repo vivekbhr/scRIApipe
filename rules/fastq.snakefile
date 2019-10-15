@@ -23,7 +23,7 @@ rule FastQC:
         out = "FastQC/logs/FastQC.{sample}{read}.out",
         err = "FastQC/logs/FastQC.{sample}{read}.err"
     threads: 2
-    #conda: CONDA_SHARED_ENV
+    conda: CONDA_SHARED_ENV
     shell: "fastqc -o FastQC {input} > {log.out} 2> {log.err}"
 
 if downsample:
@@ -37,7 +37,7 @@ if downsample:
         params:
             num_reads = downsample
         threads: 10
-        #conda: CONDA_SHARED_ENV
+        conda: CONDA_SHARED_ENV
         shell:
             """
             seqtk sample -s 100 {input.r1} {params.num_reads} | pigz -p {threads} -9 > {output.r1}
@@ -58,7 +58,7 @@ if trim:
             out = "logs/Cutadapt.{sample}.out",
             err = "logs/Cutadapt.{sample}.err"
         threads: 8
-        #conda: CONDA_SHARED_ENV
+        conda: CONDA_SHARED_ENV
         shell:
             """
             cutadapt -j {threads} -e 0.1 -q 16 -O 3 --trim-n --minimum-length 10 \
@@ -78,5 +78,5 @@ if trim:
             out = "logs/FastQC_trimmed.{sample}{read}.out",
             err = "logs/FastQC_trimmed.{sample}{read}.err"
         threads: 2
-        #conda: CONDA_SHARED_ENV
+        conda: CONDA_SHARED_ENV
         shell: "fastqc -o {params.outdir} {input} > {log.out} 2> {log.err}"

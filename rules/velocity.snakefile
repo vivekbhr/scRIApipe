@@ -13,7 +13,7 @@ rule cDNA_capture:
         out = "logs/cDNA_capture_{sample}.out",
         err = "logs/cDNA_capture_{sample}.err"
     threads: 2
-    #conda: CONDA_scRIA_ENV
+    conda: CONDA_SHARED_ENV
     shell:
         "bustools capture -s -o {params.out} -c {input.cdna} \
         -e {input.mtx} -t {input.transcripts} {input.busfile} > {log.out} 2> {log.err}"
@@ -33,7 +33,7 @@ rule introns_capture:
         out = "logs/introns_capture_{sample}.out",
         err = "logs/introns_capture_{sample}.err"
     threads: 2
-    #conda: CONDA_scRIA_ENV
+    conda: CONDA_SHARED_ENV
     shell:
         "bustools capture -s -o {params.out} -c {input.introns} \
         -e {input.mtx} -t {input.transcripts} {input.busfile} > {log.out} 2> {log.err}"
@@ -51,7 +51,7 @@ rule spliced_counts:
         out = "logs/spliced_counts_{sample}.out",
         err = "logs/spliced_counts_{sample}.err"
     threads: 2
-    #conda: CONDA_scRIA_ENV
+    conda: CONDA_SHARED_ENV
     shell:
         "bustools count -o {params.prefix} -g {input.t2g} -e {input.mtx} \
         -t {input.transcripts} --genecounts {input.bus} > {log.out} 2> {log.err}"
@@ -69,7 +69,7 @@ rule unspliced_counts:
         out = "logs/unspliced_counts_{sample}.out",
         err = "logs/unspliced_counts_{sample}.err"
     threads: 2
-    #conda: CONDA_scRIA_ENV
+    conda: CONDA_SHARED_ENV
     shell:
         "bustools count -o {params.prefix} -g {input.t2g} -e {input.mtx} \
         -t {input.transcripts} --genecounts {input.bus} > {log.out} 2> {log.err}"
@@ -86,6 +86,6 @@ rule velocyto:
         out = "logs/velocity_report.out",
         err = "logs/velocity_report.err"
     threads: 2
-    #conda: CONDA_scRIA_ENV
+    conda: CONDA_SHARED_ENV
     shell:
         "cat {params.rscript} | R --vanilla --quiet --args {params.rmd} > {log.out} 2> {log.err}"

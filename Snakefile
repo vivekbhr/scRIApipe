@@ -11,6 +11,9 @@ def load_configfile(configfile):
        config = yaml.load(f, Loader=yaml.FullLoader)
    return(config)
 
+def set_condaEnv():
+    return{'CONDA_SHARED_ENV': 'env.yaml'}
+
 def get_sample_names(infiles, ext, reads):
     """
     Get sample names without file extensions
@@ -31,7 +34,7 @@ def get_sample_names(infiles, ext, reads):
     return sorted(list(s))
 
 # load config file
-globals().update(load_configfile(workflow.overwrite_configfile))
+globals().update(load_configfile(workflow.overwrite_configfiles[0]))
 
 ## load samples
 infiles = sorted(glob.glob(os.path.join(indir, '*'+ext)))

@@ -18,13 +18,13 @@ rule prep_velocity_files:
     params:
         genome = genome_id,
         readLength = read_length,
-        script=os.path.join(workflow.basedir, "rules", "velocyto_indexing.R"),
+        script=os.path.join(workflow.basedir, "tools", "velocyto_indexing.R"),
         outdir = "annotations"
     log:
         out = "logs/prep_velocyto.out",
         err = "logs/prep_velocyto.err"
     threads: 2
-    #conda: CONDA_scRIA_ENV
+    conda: CONDA_SHARED_ENV
     shell: "{params.script} {params.genome} {input} {params.readLength} {params.outdir} > {log.out} 2> {log.err}"
 
 rule transcript_index:
@@ -37,7 +37,7 @@ rule transcript_index:
         out = "logs/transcript_index.out",
         err = "logs/transcript_index.err"
     threads: 1
-    #conda: CONDA_scRIA_ENV
+    conda: CONDA_SHARED_ENV
     shell: "{params.kallisto} index -i {output} -k 31 {input} > {log.out} 2> {log.err}"
 
 rule velocity_index:
@@ -51,7 +51,7 @@ rule velocity_index:
         out = "logs/velocity_index.out",
         err = "logs/velocity_index.err"
     threads: 1
-    #conda: CONDA_scRIA_ENV
+    conda: CONDA_SHARED_ENV
     shell: "{params.kallisto} index -i {output} -k 31 {input} > {log.out} 2> {log.err}"
 
 rule transcript_map:
@@ -70,7 +70,7 @@ rule transcript_map:
         out = "logs/transcript_map.{sample}.out",
         err = "logs/transcript_map.{sample}.err"
     threads: 10
-    #conda: CONDA_scRIA_ENV
+    conda: CONDA_SHARED_ENV
     shell: "{params.kallisto} bus -i {input.idx} -x VASASeq -t {threads} -o {params.outdir} {input.R1} {input.R2} > {log.out} 2> {log.err}"
 
 rule velocity_map:
@@ -89,7 +89,7 @@ rule velocity_map:
         out = "logs/velocity_map.{sample}.out",
         err = "logs/velocity_map.{sample}.err"
     threads: 10
-    #conda: CONDA_scRIA_ENV
+    conda: CONDA_SHARED_ENV
     shell:
         "{params.kallisto} bus -i {input.idx} -x VASASeq -t {threads} -o {params.outdir} {input.R1} {input.R2} > {log.out} 2> {log.err}"
 
@@ -104,7 +104,7 @@ rule correct_sort:
         out = "logs/correct_sort_{sample}.out",
         err = "logs/correct_sort_{sample}.err"
     threads: 10
-    #conda: CONDA_scRIA_ENV
+    conda: CONDA_SHARED_ENV
     shell:
         """
         mkdir -p {params.outdir};
@@ -126,7 +126,7 @@ rule velocyto_correct_sort:
         out = "logs/correct_sort_velocyto_{sample}.out",
         err = "logs/correct_sort_velocyto_{sample}.err"
     threads: 10
-    #conda: CONDA_scRIA_ENV
+    conda: CONDA_SHARED_ENV
     shell:
         """
         mkdir -p {params.outdir};
@@ -151,7 +151,7 @@ rule get_tcc:
         out = "logs/get_tcc_{sample}.out",
         err = "logs/get_tcc_{sample}.err"
     threads: 1
-    #conda: CONDA_scRIA_ENV
+    conda: CONDA_SHARED_ENV
     shell:  "bustools count -o {params.out} -g {input.t2g} -e {input.mtx} -t {input.transcripts} {input.busfile} > {log.out} 2> {log.err}"
 
 rule get_geneCounts:
@@ -168,7 +168,7 @@ rule get_geneCounts:
         out = "logs/get_geneCounts_{sample}.out",
         err = "logs/get_geneCounts_{sample}.err"
     threads: 1
-    #conda: CONDA_scRIA_ENV
+    conda: CONDA_SHARED_ENV
     shell:  "bustools count --genecounts -o {params.out} -g {input.t2g} -e {input.mtx} -t {input.transcripts} {input.busfile} > {log.out} 2> {log.err}"
 
 rule get_counts_txt:
@@ -178,5 +178,5 @@ rule get_counts_txt:
         "transcripts_quant/{sample}/output.txt"
     log: "logs/get_counts_{sample}.out",
     threads: 1
-    #conda: CONDA_scRIA_ENV
+    conda: CONDA_SHARED_ENV
     shell: "bustools text -o {output} {input} > {log}"
