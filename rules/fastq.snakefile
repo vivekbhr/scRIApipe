@@ -62,7 +62,10 @@ if trim:
         shell:
             """
             cutadapt -j {threads} -e 0.1 -q 16 -O 3 --trim-n --minimum-length 10 \
-            -a AGATCGGAAGAGC -A AGATCGGAAGAGC -u -4 -U -3 --nextseq-trim=16 \
+            -a AGATCGGAAGAGC -A AGATCGGAAGAGC -u -14 -U -4 --nextseq-trim=16 \
+            -b TGGAATTCTCGGGTGCCAAGG -B TGGAATTCTCGGGTGCCAAGG \
+            -b ATCTCGTATGCCGTCTTCTGCTTG -B ATCTCGTATGCCGTCTTCTGCTTG \
+            -b GTTCAGAGTTCTACAGTCCGACGATC -B GTTCAGAGTTCTACAGTCCGACGATC \
             --match-read-wildcards {params.opts} \
             -o "{output.R1}" -p "{output.R2}" "{input.R1}" "{input.R2}" > {log.out} 2> {log.err}
             """
