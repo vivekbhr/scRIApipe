@@ -82,7 +82,11 @@ rule all:
         expand("velocity_quant/{sample}/introns_capture/split.bus", sample = samples),
         expand("velocity_quant/{sample}/spliced_counts/spliced.mtx", sample = samples),
         expand("velocity_quant/{sample}/unspliced_counts/unspliced.mtx", sample = samples),
-        "velocity_report.html"
+        "velocity_output/anndata.loom",
+        "velocity_output/anndata_filtered.loom",
+        "velocity_output/qc-metrics.csv",
+        "velocity_output/velocity-grid_louvain.png"
+#        "velocity_report.html"
 
 ### execute after workflow finished ############################################
 ################################################################################

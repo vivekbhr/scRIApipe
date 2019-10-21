@@ -77,15 +77,39 @@ rule unspliced_counts:
 rule velocyto:
     input:
         unspliced = expand("velocity_quant/{sample}/unspliced_counts/unspliced.mtx", sample = samples),
-        spliced = expand("velocity_quant/{sample}/spliced_counts/spliced.mtx", sample = samples)
-    output: "velocity_report.html"
+        spliced = expand("velocity_quant/{sample}/spliced_counts/spliced.mtx", sample = samples),
+        t2g = "annotations/tr2g.tsv"
+    output:
+        adata_all = "velocity_output/anndata.loom",
+        adata_filt = "velocity_output/anndata_filtered.loom",
+        qc_metrics = "velocity_output/qc-metrics.csv",
+        velo_fig1 = "velocity_output/velocity-grid_louvain.png",
+        velo_fig2 = "velocity_output/velocity-grid_samples.png"
     params:
-        rscript = os.path.join(workflow.basedir, "tools", "velocity_report.R"),
-        rmd = os.path.join(workflow.basedir, "tools", "velocity_report.Rmd")
+        scvelo = os.path.join(workflow.basedir, "tools", "scVelo_wrapper.py"),
+        samples = " ".join(samples),
+        outdir = "scVelo_test"
     log:
-        out = "logs/velocity_report.out",
-        err = "logs/velocity_report.err"
+        out = "logs/velocity_report.out"
     threads: 2
     conda: CONDA_SHARED_ENV
     shell:
-        "cat {params.rscript} | R --vanilla --quiet --args {params.rmd} > {log.out} 2> {log.err}"
+        "{params.scvelo} -s {params.samples} -o {params.outdir} -t {input.t2g} > {log.out} 2>&1"
+
+
+
+#rule velocyto:
+#    input:
+#        unspliced = expand("velocity_quant/{sample}/unspliced_counts/unspliced.mtx", sample = samples),
+#        spliced = expand("velocity_quant/{sample}/spliced_counts/spliced.mtx", sample = samples)
+#    output: "velocity_report.html"
+#    params:
+#        rscript = os.path.join(workflow.basedir, "tools", "velocity_report.R"),
+#        rmd = os.path.join(workflow.basedir, "tools", "velocity_report.Rmd")
+#    log:
+#        out = "logs/velocity_report.out",
+#        err = "logs/velocity_report.err"
+#    threads: 2
+#    conda: CONDA_SHARED_ENV
+#    shell:
+#        "cat {params.rscript} | R --vanilla --quiet --args {params.rmd} > {log.out} 2> {log.err}"
