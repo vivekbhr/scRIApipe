@@ -249,7 +249,14 @@ def main():
     scv.pp.moments(adata, n_pcs=30, n_neighbors=30)
     scv.tl.velocity(adata)
     # kept velocity genes
-    print("Number of velocity genes kept after default filtering: {}".format(adata.var['velocity_genes'].sum()) )
+    nveloGenes = adata.var['velocity_genes'].sum()
+    print("Number of velocity genes kept after default filtering: {}".format(nveloGenes))
+    if nveloGenes < 10:
+        print("Reducing the default threshold to get more velocity genes. New threshold: -0.05")
+        scv.tl.velocity_genes(adata, min_r2=-0.05)
+        if nveloGenes < 10:
+            print("Still less than 10 velocity genes left. Output might not be meaningful")
+
     #adata.layers['velocity']
     # velocity Rsq histogram
     hs = scv.pl.hist(adata.var['velocity_r2'], show = False)
