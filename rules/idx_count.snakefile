@@ -60,7 +60,7 @@ rule transcript_map:
         R2 = "FASTQ_trimmed/{sample}"+reads[1]+".fastq.gz" if trim else "FASTQ/{sample}"+reads[1]+".fastq.gz",
         idx = "annotations/cdna.all.idx"
     output:
-        bus = "transcripts_quant/{sample}/output.bus",
+        bus = temp("transcripts_quant/{sample}/output.bus"),
         matrix = "transcripts_quant/{sample}/matrix.ec",
         transcripts = "transcripts_quant/{sample}/transcripts.txt"
     params:
@@ -80,7 +80,7 @@ rule velocity_map:
         R2 = "FASTQ_trimmed/{sample}"+reads[1]+".fastq.gz" if trim else "FASTQ/{sample}"+reads[1]+".fastq.gz",
         idx = "annotations/cDNA_introns.idx"
     output:
-        bus = "velocity_quant/{sample}/output.bus",
+        bus = temp("velocity_quant/{sample}/output.bus"),
         matrix = "velocity_quant/{sample}/matrix.ec",
         transcripts = "velocity_quant/{sample}/transcripts.txt"
     params:
@@ -124,17 +124,15 @@ rule velocyto_correct_sort:
         "velocity_quant/{sample}/output.correct.sort.bus"
     params:
         outdir = 'velocity_quant/{sample}'
-    log:
-        out = "logs/correct_sort_velocyto_{sample}.out",
-        err = "logs/correct_sort_velocyto_{sample}.err"
+    log: "logs/correct_sort_velocyto_{sample}.out"
     threads: 10
     conda: CONDA_SHARED_ENV
     shell:
         """
         mkdir -p {params.outdir};
         bustools correct -w "{input.whitelist}" \
-        -o {params.outdir}/output.correct.bus {input.busfile} > {log.out} 2> {log.err};
-        bustools sort -t {threads} -o {output} {params.outdir}/output.correct.bus >> {log.out} 2>> {log.err};
+        -o {params.outdir}/output.correct.bus {input.busfile} > {log} 2>&1;
+        bustools sort -t {threads} -o {output} {params.outdir}/output.correct.bus >> {log};
         rm {params.outdir}/output.correct.bus
         """
 
@@ -149,12 +147,10 @@ rule get_tcc:
          txt = "transcripts_quant/{sample}/eq_counts/tcc.ec.txt"
     params:
         out = "transcripts_quant/{sample}/eq_counts/tcc"
-    log:
-        out = "logs/get_tcc_{sample}.out",
-        err = "logs/get_tcc_{sample}.err"
+    log: "logs/get_tcc_{sample}.out"
     threads: 1
     conda: CONDA_SHARED_ENV
-    shell:  "bustools count -o {params.out} -g {input.t2g} -e {input.mtx} -t {input.transcripts} {input.busfile} > {log.out} 2> {log.err}"
+    shell:  "bustools count -o {params.out} -g {input.t2g} -e {input.mtx} -t {input.transcripts} {input.busfile} > {log} 2>&1"
 
 rule get_geneCounts:
     input:
@@ -166,12 +162,10 @@ rule get_geneCounts:
          mtx = "transcripts_quant/{sample}/gene_counts/gene.mtx"
     params:
         out = "transcripts_quant/{sample}/gene_counts/gene"
-    log:
-        out = "logs/get_geneCounts_{sample}.out",
-        err = "logs/get_geneCounts_{sample}.err"
+    log: "logs/get_geneCounts_{sample}.out"
     threads: 1
     conda: CONDA_SHARED_ENV
-    shell:  "bustools count --genecounts -o {params.out} -g {input.t2g} -e {input.mtx} -t {input.transcripts} {input.busfile} > {log.out} 2> {log.err}"
+    shell:  "bustools count --genecounts -o {params.out} -g {input.t2g} -e {input.mtx} -t {input.transcripts} {input.busfile} > {log} 2>&1"
 
 rule get_counts_txt:
     input:

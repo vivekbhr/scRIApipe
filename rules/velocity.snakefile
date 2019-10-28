@@ -1,78 +1,66 @@
-rule cDNA_capture:
-    input:
-        mtx = "velocity_quant/{sample}/matrix.ec",
-        cdna = "annotations/cDNA_tx_to_capture.txt",
-        busfile = "velocity_quant/{sample}/output.correct.sort.bus",
-        transcripts = "velocity_quant/{sample}/transcripts.txt"
-    output:
-        ec = "velocity_quant/{sample}/cDNA_capture/captured.ec",
-        bus = "velocity_quant/{sample}/cDNA_capture/captured.bus"
-    params:
-        out = "velocity_quant/{sample}/cDNA_capture"
-    log:
-        out = "logs/cDNA_capture_{sample}.out",
-        err = "logs/cDNA_capture_{sample}.err"
-    threads: 2
-    conda: CONDA_SHARED_ENV
-    shell:
-        "bustools capture -o {params.out} -c {input.cdna} \
-        -e {input.mtx} -t {input.transcripts} {input.busfile} > {log.out} 2> {log.err}"
-
-rule introns_capture:
+## bustools v 0.39.3
+## for spliced counts, we subset the bus file to get the complement of the "introns" transcript set
+rule spliced_capture:
     input:
         mtx = "velocity_quant/{sample}/matrix.ec",
         introns = "annotations/introns_tx_to_capture.txt",
         busfile = "velocity_quant/{sample}/output.correct.sort.bus",
         transcripts = "velocity_quant/{sample}/transcripts.txt"
-    output:
-        ec = "velocity_quant/{sample}/introns_capture/captured.ec",
-        bus = "velocity_quant/{sample}/introns_capture/captured.bus"
-    params:
-        out = "velocity_quant/{sample}/introns_capture"
-    log:
-        out = "logs/introns_capture_{sample}.out",
-        err = "logs/introns_capture_{sample}.err"
-    threads: 2
+    output: "velocity_quant/{sample}/spliced.bus"
+    log: "logs/spliced_capture_{sample}.out"
+    threads: 1
     conda: CONDA_SHARED_ENV
     shell:
-        "bustools capture -o {params.out} -c {input.introns} \
-        -e {input.mtx} -t {input.transcripts} {input.busfile} > {log.out} 2> {log.err}"
+        "bustools capture -s -x -o {output} -c {input.introns} \
+        -e {input.mtx} -t {input.transcripts} {input.busfile} > {log} 2>&1"
+
+## for unspliced counts, we subset the bus file to get the complement of the captured set from "cDNA" list
+rule unspliced_capture:
+    input:
+        mtx = "velocity_quant/{sample}/matrix.ec",
+        cdna = "annotations/cDNA_tx_to_capture.txt",
+        busfile = "velocity_quant/{sample}/output.correct.sort.bus",
+        transcripts = "velocity_quant/{sample}/transcripts.txt"
+    output: "velocity_quant/{sample}/unspliced.bus"
+    log: "logs/unspliced_capture_{sample}.out"
+    threads: 1
+    conda: CONDA_SHARED_ENV
+    shell:
+        "bustools capture -s -x -o {output} -c {input.cdna} \
+        -e {input.mtx} -t {input.transcripts} {input.busfile} > {log} 2>&1"
 
 rule spliced_counts:
     input:
         t2g = "annotations/tr2g.tsv",
-        mtx = "velocity_quant/{sample}/matrix.ec",
-        bus = "velocity_quant/{sample}/cDNA_capture/captured.bus",
+        ec = "velocity_quant/{sample}/matrix.ec",
+        bus = "velocity_quant/{sample}/spliced.bus",
         transcripts = "velocity_quant/{sample}/transcripts.txt"
     output: "velocity_quant/{sample}/spliced_counts/spliced.mtx"
     params:
         prefix = "velocity_quant/{sample}/spliced_counts/spliced"
-    log:
-        out = "logs/spliced_counts_{sample}.out",
-        err = "logs/spliced_counts_{sample}.err"
-    threads: 2
+    log: "logs/spliced_counts_{sample}.out"
+    threads: 1
     conda: CONDA_SHARED_ENV
     shell:
-        "bustools count -o {params.prefix} -g {input.t2g} -e {input.mtx} \
-        -t {input.transcripts} --genecounts {input.bus} > {log.out} 2> {log.err}"
+        "bustools count -o {params.prefix} -g {input.t2g} -e {input.ec} \
+        -t {input.transcripts} --genecounts {input.bus} > {log} 2>&1"
+
 
 rule unspliced_counts:
     input:
         t2g = "annotations/tr2g.tsv",
-        mtx = "velocity_quant/{sample}/matrix.ec",
-        bus = "velocity_quant/{sample}/introns_capture/captured.bus",
+        ec = "velocity_quant/{sample}/matrix.ec",
+        bus = "velocity_quant/{sample}/unspliced.bus",
         transcripts = "velocity_quant/{sample}/transcripts.txt"
     output: "velocity_quant/{sample}/unspliced_counts/unspliced.mtx"
     params:
         prefix = "velocity_quant/{sample}/unspliced_counts/unspliced"
-    log:
-        out = "logs/unspliced_counts_{sample}.out",
-        err = "logs/unspliced_counts_{sample}.err"
-    threads: 2
+    log: "logs/unspliced_counts_{sample}.out"
+    threads: 1
     conda: CONDA_SHARED_ENV
     shell:
-        "bustools count -o {params.prefix} -g {input.t2g} -e {input.mtx} \
-        -t {input.transcripts} --genecounts {input.bus} > {log.out} 2> {log.err}"
+        "bustools count -o {params.prefix} -g {input.t2g} -e {input.ec} \
+        -t {input.transcripts} --genecounts {input.bus} > {log} 2>&1"
 
 rule velocyto:
     input:
