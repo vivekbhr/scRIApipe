@@ -11,14 +11,13 @@ import argparse
 import os
 import sys
 import textwrap
+
 # for scVelo
 import pandas as pd
 import scanpy as sc
 import numpy as np
 import scipy as scp
 import sklearn
-import matplotlib.pyplot as plt
-import matplotlib
 import sys
 import loompy
 import scipy.optimize
@@ -26,6 +25,11 @@ import scvelo as scv
 import glob
 import pickle
 import anndata
+
+# for plots
+import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.backends.backend_pdf
 
 from collections import Counter
 from sklearn.decomposition import PCA
@@ -68,10 +72,24 @@ def get_matrix(sampleName):
            'genes': s_genes}
     return(out)
 
+## to plot a given gene list (not exposed to the wrapper yet)
+def plotGenesOnVelocity(geneList, outPdf):
+    pdf = matplotlib.backends.backend_pdf.PdfPages(outPdf)
+    for gene in geneList:
+        try:
+            fig = scv.pl.velocity_embedding_grid(adata, basis='umap',
+                                                 color= gene, color_map = 'Reds',
+                                                dpi = 300, use_raw = True, alpha=0.3, show=False)
+            pdf.savefig(fig.get_figure())
+        except ValueError:
+            print(gene+" not in velocity genes.")
+            continue
+    pdf.close()
+
+    return(None)
 
 
-
-samples = ['BM_all_S3merged', 'BM_all_S4merged', 'BM_progenitors_S1merged', 'BM_progenitors_S2merged']
+#samples = ['BM_all_S3merged', 'BM_all_S4merged', 'BM_progenitors_S1merged', 'BM_progenitors_S2merged']
 
 def parse_args(defaults=None):
     """
