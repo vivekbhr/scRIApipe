@@ -4,6 +4,10 @@ single-cell **R**NA **I**soform **A**nalysis **Pipe**line
 
 **Author: @vivekbhr**
 
+## DAG
+
+[](./workflow_dag.png)
+
 ## How to run
 
 1. Clone the repo

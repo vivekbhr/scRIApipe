@@ -5,8 +5,8 @@ rule cDNA_capture:
         busfile = "velocity_quant/{sample}/output.correct.sort.bus",
         transcripts = "velocity_quant/{sample}/transcripts.txt"
     output:
-        ec = "velocity_quant/{sample}/cDNA_capture/split.ec",
-        bus = "velocity_quant/{sample}/cDNA_capture/split.bus"
+        ec = "velocity_quant/{sample}/cDNA_capture/captured.ec",
+        bus = "velocity_quant/{sample}/cDNA_capture/captured.bus"
     params:
         out = "velocity_quant/{sample}/cDNA_capture"
     log:
@@ -15,7 +15,7 @@ rule cDNA_capture:
     threads: 2
     conda: CONDA_SHARED_ENV
     shell:
-        "bustools capture -s -o {params.out} -c {input.cdna} \
+        "bustools capture -o {params.out} -c {input.cdna} \
         -e {input.mtx} -t {input.transcripts} {input.busfile} > {log.out} 2> {log.err}"
 
 rule introns_capture:
@@ -25,8 +25,8 @@ rule introns_capture:
         busfile = "velocity_quant/{sample}/output.correct.sort.bus",
         transcripts = "velocity_quant/{sample}/transcripts.txt"
     output:
-        ec = "velocity_quant/{sample}/introns_capture/split.ec",
-        bus = "velocity_quant/{sample}/introns_capture/split.bus"
+        ec = "velocity_quant/{sample}/introns_capture/captured.ec",
+        bus = "velocity_quant/{sample}/introns_capture/captured.bus"
     params:
         out = "velocity_quant/{sample}/introns_capture"
     log:
@@ -35,14 +35,14 @@ rule introns_capture:
     threads: 2
     conda: CONDA_SHARED_ENV
     shell:
-        "bustools capture -s -o {params.out} -c {input.introns} \
+        "bustools capture -o {params.out} -c {input.introns} \
         -e {input.mtx} -t {input.transcripts} {input.busfile} > {log.out} 2> {log.err}"
 
 rule spliced_counts:
     input:
         t2g = "annotations/tr2g.tsv",
         mtx = "velocity_quant/{sample}/matrix.ec",
-        bus = "velocity_quant/{sample}/cDNA_capture/split.bus",
+        bus = "velocity_quant/{sample}/cDNA_capture/captured.bus",
         transcripts = "velocity_quant/{sample}/transcripts.txt"
     output: "velocity_quant/{sample}/spliced_counts/spliced.mtx"
     params:
@@ -60,7 +60,7 @@ rule unspliced_counts:
     input:
         t2g = "annotations/tr2g.tsv",
         mtx = "velocity_quant/{sample}/matrix.ec",
-        bus = "velocity_quant/{sample}/introns_capture/split.bus",
+        bus = "velocity_quant/{sample}/introns_capture/captured.bus",
         transcripts = "velocity_quant/{sample}/transcripts.txt"
     output: "velocity_quant/{sample}/unspliced_counts/unspliced.mtx"
     params:
