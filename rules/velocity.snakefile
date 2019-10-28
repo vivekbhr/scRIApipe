@@ -88,13 +88,12 @@ rule velocyto:
     params:
         scvelo = os.path.join(workflow.basedir, "tools", "scVelo_wrapper.py"),
         samples = " ".join(samples),
-        outdir = "scVelo_test"
-    log:
-        out = "logs/velocity_report.out"
+        outdir = "velocity_output"
+    log: "logs/velocity_report.out"
     threads: 2
     conda: CONDA_SHARED_ENV
     shell:
-        "{params.scvelo} -s {params.samples} -o {params.outdir} -t {input.t2g} > {log.out} 2>&1"
+        "{params.scvelo} -s {params.samples} -o {params.outdir} -t {input.t2g} > {log} 2>&1"
 
 
 

@@ -130,6 +130,19 @@ def parse_args(defaults=None):
                           required=True,
                           help="output directory")
 
+    parser.add_argument("-p", "--protocol",
+                          dest="protocol",
+                          required=False,
+                          help="scRNA-seq protocol used. (default: '%(default)s')",
+                          default='VASASeq')
+
+    parser.add_argument("-r", "--readLength",
+                          dest="read_length",
+                          required=False,
+                          type=int,
+                          help="Read length of the input fastq files. (default: '%(default)s')",
+                          default=61)
+
     parser.add_argument("-s", "--snakemakeOptions",
                           dest="snakemakeOptions",
                           metavar="STR",

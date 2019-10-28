@@ -9,5 +9,6 @@ trimmerOptions: "-b A{'6'} -b T{'6'}"
 genome_id: 'mm10'
 barcode_tsv: '/hpc/hub_oudenaarden/vbhardwaj/annotations/celseq2_barcodes.csv'
 input_gtf: '/hpc/hub_oudenaarden/group_references/ensembl/95/mus_musculus/annotations.gtf'
-read_length: 61
 cdna_fasta: 'Mus_musculus.GRCm38.cdna.all.fa'
+protocol:
+read_length:

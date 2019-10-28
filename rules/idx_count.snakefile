@@ -65,13 +65,14 @@ rule transcript_map:
         transcripts = "transcripts_quant/{sample}/transcripts.txt"
     params:
         outdir = "transcripts_quant/{sample}",
-        kallisto = os.path.join(workflow.basedir, "tools", "kallisto")
+        kallisto = os.path.join(workflow.basedir, "tools", "kallisto"),
+        protocol = 'VASASeq'
     log:
         out = "logs/transcript_map.{sample}.out",
         err = "logs/transcript_map.{sample}.err"
     threads: 10
     conda: CONDA_SHARED_ENV
-    shell: "{params.kallisto} bus -i {input.idx} -x VASASeq -t {threads} -o {params.outdir} {input.R1} {input.R2} > {log.out} 2> {log.err}"
+    shell: "{params.kallisto} bus -i {input.idx} -x {params.protocol} -t {threads} -o {params.outdir} {input.R1} {input.R2} > {log.out} 2> {log.err}"
 
 rule velocity_map:
     input:
