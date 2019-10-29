@@ -75,8 +75,8 @@ Index builing needs >40G of memory, if the workflow fails and the *logs/velocity
 
 Major outputs of the workflow are:
 
-  - Transcript compatibility counts (TCC) in folder <outdir>/transcripts_quant/<sample>/eq_counts/tcc.mtx
-  - Gene counts in folder <outdir>/transcripts_quant/<sample>/gene_counts/gene.mtx
-  - RNA velocity output in folder <outdir>/velocity_output (normal/filtered loom files, velocity plots)
+  - Transcript compatibility counts (TCC) in folder `<outdir>/transcripts_quant/<sample>/eq_counts/tcc.mtx`
+  - Gene counts in folder `<outdir>/transcripts_quant/<sample>/gene_counts/gene.mtx`
+  - RNA velocity output in folder `<outdir>/velocity_output` (normal/filtered loom files, velocity plots)
 
 ![](./velocity-stream_louvain_example.png)
