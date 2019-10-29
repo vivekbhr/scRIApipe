@@ -6,7 +6,7 @@ single-cell **R**NA **I**soform **A**nalysis **Pipe**line
 
 ## DAG
 
-[](./workflow_dag.png)
+![](./workflow_dag.png)
 
 ## How to run
 
@@ -70,3 +70,13 @@ After running the pipeline, **LOG** file are stored in the /log/ directory and t
 
 **NOTE: memory errors**
 Index builing needs >40G of memory, if the workflow fails and the *logs/velocity_index.err* says something like `std::badalloc`, increase memory in the file `cluster_config.yaml` in the scRIA folder.
+
+## Output
+
+Major outputs of the workflow are:
+
+  - Transcript compatibility counts (TCC) in folder <outdir>/transcripts_quant/<sample>/eq_counts/tcc.mtx
+  - Gene counts in folder <outdir>/transcripts_quant/<sample>/gene_counts/gene.mtx
+  - RNA velocity output in folder <outdir>/velocity_output (normal/filtered loom files, velocity plots)
+
+![](./velocity-stream_louvain_example.png)
