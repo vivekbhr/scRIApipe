@@ -19,13 +19,6 @@ if (!require(BiocManager)) {
 if (!require(BUSpaRse)) {
 devtools::install_github("BUStools/BUSpaRse")
 }
-if (!require(seurat-wrappers)) {
-devtools::install_github("satijalab/seurat-wrappers")
-}
-if (!require(velocyto)) {
-devtools::install_github("velocyto-team/velocyto.R")
-}
-
 
 ## load appropriate bsgenome
 message("Loading genome")
@@ -54,4 +47,4 @@ BUSpaRse::get_velocity_files(gtf.txdb,
                    L = readLength - 1,
                    Genome = g,
                    out_path = outdir,
-                   isoform_action = "collapse")
+                   isoform_action = "separate")

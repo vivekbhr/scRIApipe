@@ -29,8 +29,7 @@ rule prep_velocity_files:
 
 rule transcript_index:
     input: cdna_fasta #"Mus_musculus.GRCm38.cdna.all.fa"
-    output:
-        "annotations/cdna.all.idx"
+    output: "annotations/cdna.all.idx"
     params:
         kallisto = os.path.join(workflow.basedir, "tools", "kallisto")
     log:

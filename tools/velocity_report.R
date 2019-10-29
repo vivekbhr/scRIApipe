@@ -6,6 +6,13 @@
 args = commandArgs(TRUE)
 rmdTemplate <- args[1]
 
+if (!require(seurat-wrappers)) {
+devtools::install_github("satijalab/seurat-wrappers")
+}
+if (!require(velocyto)) {
+devtools::install_github("velocyto-team/velocyto.R")
+}
+
 library(magrittr)
 library(BUSpaRse)
 library(velocyto.R)
