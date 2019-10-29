@@ -3,12 +3,21 @@
 ext: '.fastq.gz'
 ## paired-end read name extension (default: ["_R1", "_R2"])
 reads: ["_R1","_R2"]
+## downsample fastq to the given number before alignment
 downsample:
+## Trim the reads? (must-do for raw VASA-seq)
 trim: True
+## options for cutadapt
 trimmerOptions: "-b A{'6'} -b T{'6'}"
+## UCSC ID of the genome (only used to fetch tx annotation)
 genome_id: 'mm10'
+## TSV of the barcodes (tsv file with col1 = some id, and col2 = barcode sequence)
 barcode_tsv: '/hpc/hub_oudenaarden/vbhardwaj/annotations/celseq2_barcodes.csv'
+## GTF file (most important, better filter for pseudogenes etc first)
 input_gtf: '/hpc/hub_oudenaarden/group_references/ensembl/95/mus_musculus/annotations.gtf'
+## a GENCODE formatted fasta file for transcripts, this file is used to get the gene symbols etc
 cdna_fasta: 'Mus_musculus.GRCm38.cdna.all.fa'
+## protocol name
 protocol:
+## read length (for kallisto index)
 read_length:

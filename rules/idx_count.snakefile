@@ -28,7 +28,7 @@ rule prep_velocity_files:
     shell: "{params.script} {params.genome} {input} {params.readLength} {params.outdir} > {log.out} 2> {log.err}"
 
 rule transcript_index:
-    input: cdna_fasta #"Mus_musculus.GRCm38.cdna.all.fa"
+    input: cdna_fasta 
     output: "annotations/cdna.all.idx"
     params:
         kallisto = os.path.join(workflow.basedir, "tools", "kallisto")
