@@ -8,7 +8,7 @@ downsample:
 ## Trim the reads? (must-do for raw VASA-seq)
 trim: True
 ## options for cutadapt
-trimmerOptions: "-a A{'6'} -a T{'6'} -b A{'6'} -b T{'6'}"
+trimmerOptions: "-b W{'10'} -B W{'10'}"
 ## UCSC ID of the genome (used to fetch tx sequences)
 genome_id: 'mm10'
 ## TSV of the barcodes (tsv file with col1 = some id, and col2 = barcode sequence)
