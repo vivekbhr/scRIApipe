@@ -28,7 +28,7 @@ rule prep_velocity_files:
     shell: "{params.script} {params.genome} {input} {params.readLength} {params.outdir} > {log.out} 2> {log.err}"
 
 rule transcript_index:
-    input: cdna_fasta 
+    input: cdna_fasta
     output: "annotations/cdna.all.idx"
     params:
         kallisto = os.path.join(workflow.basedir, "tools", "kallisto")
@@ -89,7 +89,7 @@ rule velocity_map:
     log:
         out = "logs/velocity_map.{sample}.out",
         err = "logs/velocity_map.{sample}.err"
-    threads: 10
+    threads: 20
     conda: CONDA_SHARED_ENV
     shell:
         "{params.kallisto} bus -i {input.idx} -x {params.protocol} -t {threads} -o {params.outdir} {input.R1} {input.R2} > {log.out} 2> {log.err}"
