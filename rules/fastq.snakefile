@@ -18,10 +18,10 @@ rule FastQC:
     input:
         "FASTQ/{sample}{read}.fastq.gz"
     output:
-        "FastQC/{sample}{read}_fastqc.html"
+        "FASTQ/FastQC/{sample}{read}_fastqc.html"
     log:
-        out = "FastQC/logs/FastQC.{sample}{read}.out",
-        err = "FastQC/logs/FastQC.{sample}{read}.err"
+        out = "logs/FastQC.{sample}{read}.out",
+        err = "logs/FastQC.{sample}{read}.err"
     threads: 2
     conda: CONDA_SHARED_ENV
     shell: "fastqc -o FastQC {input} > {log.out} 2> {log.err}"

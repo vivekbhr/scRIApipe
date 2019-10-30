@@ -66,7 +66,7 @@ localrules: FASTQ1, FASTQ2
 rule all:
     input:
         run_Trimming(trim),
-        expand("FastQC/{sample}{read}_fastqc.html", sample = samples, read=reads),
+        expand("FASTQ/FastQC/{sample}{read}_fastqc.html", sample = samples, read=reads),
         "annotations/cDNA_introns.fa",
         "annotations/cDNA_tx_to_capture.txt",
         "annotations/tr2g.tsv",
