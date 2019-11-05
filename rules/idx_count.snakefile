@@ -29,7 +29,7 @@ rule prep_velocity_files:
 
 rule transcript_index:
     input: cdna_fasta
-    output: "annotations/cdna.all.idx"
+    output: "annotations/cDNA.all.idx"
     params:
         kallisto = os.path.join(workflow.basedir, "tools", "kallisto")
     log:
@@ -57,7 +57,7 @@ rule transcript_map:
     input:
         R1 = "FASTQ_trimmed/{sample}"+reads[0]+".fastq.gz" if trim else "FASTQ/{sample}"+reads[0]+".fastq.gz",
         R2 = "FASTQ_trimmed/{sample}"+reads[1]+".fastq.gz" if trim else "FASTQ/{sample}"+reads[1]+".fastq.gz",
-        idx = "annotations/cdna.all.idx"
+        idx = "annotations/cDNA.all.idx"
     output:
         bus = temp("transcripts_quant/{sample}/output.bus"),
         matrix = "transcripts_quant/{sample}/matrix.ec",

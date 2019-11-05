@@ -71,7 +71,7 @@ rule all:
         "annotations/cDNA_tx_to_capture.txt",
         "annotations/tr2g.tsv",
         "annotations/gtf.txdb",
-        "annotations/cdna.all.idx",
+        "annotations/cDNA.all.idx",
         "annotations/cDNA_introns.idx",
         expand("transcripts_quant/{sample}/output.correct.sort.bus", sample = samples),
         expand("velocity_quant/{sample}/output.correct.sort.bus", sample = samples),
