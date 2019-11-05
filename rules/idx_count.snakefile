@@ -59,7 +59,7 @@ rule transcript_map:
         R2 = "FASTQ_trimmed/{sample}"+reads[1]+".fastq.gz" if trim else "FASTQ/{sample}"+reads[1]+".fastq.gz",
         idx = "annotations/cDNA.all.idx"
     output:
-        bus = temp("transcripts_quant/{sample}/output.bus"),
+        bus = "transcripts_quant/{sample}/output.bus",
         matrix = "transcripts_quant/{sample}/matrix.ec",
         transcripts = "transcripts_quant/{sample}/transcripts.txt"
     params:
@@ -79,7 +79,7 @@ rule velocity_map:
         R2 = "FASTQ_trimmed/{sample}"+reads[1]+".fastq.gz" if trim else "FASTQ/{sample}"+reads[1]+".fastq.gz",
         idx = "annotations/cDNA_introns.idx"
     output:
-        bus = temp("velocity_quant/{sample}/output.bus"),
+        bus = "velocity_quant/{sample}/output.bus",
         matrix = "velocity_quant/{sample}/matrix.ec",
         transcripts = "velocity_quant/{sample}/transcripts.txt"
     params:
