@@ -140,7 +140,7 @@ def parse_args(defaults=None):
     parser.add_argument("-vl", "--velocity",
                           dest="velocity",
                           required=False,
-                          action=store_true,
+                          action='store_true',
                           help="Calculate RNA velocity")
 
     parser.add_argument("-r", "--readLength",

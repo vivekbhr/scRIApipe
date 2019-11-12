@@ -62,8 +62,8 @@ def runTrimming(trim):
     else:
         return([])
 
-def runVelocity(velocity):
-    if trim:
+def runVelocity():
+    if velocity:
         file_list = [
     expand("velocity_quant/{sample}/output.correct.sort.bus", sample = samples),
     expand("velocity_quant/{sample}/spliced.bus", sample = samples),
