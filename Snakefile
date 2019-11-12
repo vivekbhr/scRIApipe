@@ -46,11 +46,13 @@ samples = get_sample_names(infiles,ext,reads)
 ################################################################################
 include: os.path.join(workflow.basedir, "rules", "fastq.snakefile")
 include: os.path.join(workflow.basedir, "rules", "idx_count.snakefile")
-include: os.path.join(workflow.basedir, "rules", "velocity.snakefile")
+
+if velocity:
+    include: os.path.join(workflow.basedir, "rules", "velocity.snakefile")
 
 ### conditional/optional rules #################################################
 ################################################################################
-def run_Trimming(trim):
+def runTrimming(trim):
     if trim:
         file_list = [
         expand("FASTQ_trimmed/{sample}{read}.fastq.gz", sample = samples, read = reads),
@@ -60,12 +62,29 @@ def run_Trimming(trim):
     else:
         return([])
 
+def runVelocity(velocity):
+    if trim:
+        file_list = [
+    expand("velocity_quant/{sample}/output.correct.sort.bus", sample = samples),
+    expand("velocity_quant/{sample}/spliced.bus", sample = samples),
+    expand("velocity_quant/{sample}/unspliced.bus", sample = samples),
+    expand("velocity_quant/{sample}/spliced_counts/spliced.mtx", sample = samples),
+    expand("velocity_quant/{sample}/unspliced_counts/unspliced.mtx", sample = samples),
+    "velocity_output/anndata.loom",
+    "velocity_output/anndata_filtered.loom",
+    "velocity_output/qc-metrics.csv",
+    "velocity_output/velocity-grid_louvain.png"
+    ]
+        return(file_list)
+    else:
+        return([])
+
 ### main rule ##################################################################
 ################################################################################
 localrules: FASTQ1, FASTQ2
 rule all:
     input:
-        run_Trimming(trim),
+        runTrimming(trim),
         expand("FASTQ/FastQC/{sample}{read}_fastqc.html", sample = samples, read=reads),
         "annotations/cDNA_introns.fa",
         "annotations/cDNA_tx_to_capture.txt",
@@ -74,19 +93,10 @@ rule all:
         "annotations/cDNA.all.idx",
         "annotations/cDNA_introns.idx",
         expand("transcripts_quant/{sample}/output.correct.sort.bus", sample = samples),
-        expand("velocity_quant/{sample}/output.correct.sort.bus", sample = samples),
         expand("transcripts_quant/{sample}/eq_counts/tcc.mtx", sample = samples),
         expand("transcripts_quant/{sample}/gene_counts/gene.mtx", sample = samples),
         expand("transcripts_quant/{sample}/output.txt", sample = samples),
-        expand("velocity_quant/{sample}/spliced.bus", sample = samples),
-        expand("velocity_quant/{sample}/unspliced.bus", sample = samples),
-        expand("velocity_quant/{sample}/spliced_counts/spliced.mtx", sample = samples),
-        expand("velocity_quant/{sample}/unspliced_counts/unspliced.mtx", sample = samples),
-        "velocity_output/anndata.loom",
-        "velocity_output/anndata_filtered.loom",
-        "velocity_output/qc-metrics.csv",
-        "velocity_output/velocity-grid_louvain.png"
-#        "velocity_report.html"
+        runVelocity()
 
 ### execute after workflow finished ############################################
 ################################################################################

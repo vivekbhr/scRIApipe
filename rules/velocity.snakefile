@@ -1,3 +1,60 @@
+### velocit indexing (prepare files)
+
+rule velocity_index:
+    input:
+        "annotations/cDNA_introns.fa"
+    output:
+        "annotations/cDNA_introns.idx"
+    params:
+        kallisto = os.path.join(workflow.basedir, "tools", "kallisto")
+    log:
+        out = "logs/velocity_index.out",
+        err = "logs/velocity_index.err"
+    threads: 1
+    conda: CONDA_SHARED_ENV
+    shell: "{params.kallisto} index -i {output} -k 31 {input} > {log.out} 2> {log.err}"
+
+### Velocity mapping (to combined cDNA-intron index)
+rule velocity_map:
+    input:
+        R1 = "FASTQ_trimmed/{sample}"+reads[0]+".fastq.gz" if trim else "FASTQ/{sample}"+reads[0]+".fastq.gz",
+        R2 = "FASTQ_trimmed/{sample}"+reads[1]+".fastq.gz" if trim else "FASTQ/{sample}"+reads[1]+".fastq.gz",
+        idx = "annotations/cDNA_introns.idx"
+    output:
+        bus = "velocity_quant/{sample}/output.bus",
+        matrix = "velocity_quant/{sample}/matrix.ec",
+        transcripts = "velocity_quant/{sample}/transcripts.txt"
+    params:
+        outdir = "velocity_quant/{sample}",
+        kallisto = os.path.join(workflow.basedir, "tools", "kallisto"),
+        protocol = 'VASASeq'
+    log:
+        out = "logs/velocity_map.{sample}.out",
+        err = "logs/velocity_map.{sample}.err"
+    threads: 20
+    conda: CONDA_SHARED_ENV
+    shell:
+        "{params.kallisto} bus -i {input.idx} -x {params.protocol} -t {threads} -o {params.outdir} {input.R1} {input.R2} > {log.out} 2> {log.err}"
+
+rule velocyto_correct_sort:
+    input:
+        whitelist = "whitelist_barcodes.txt",
+        busfile = "velocity_quant/{sample}/output.bus"
+    output:
+        "velocity_quant/{sample}/output.correct.sort.bus"
+    params:
+        outdir = 'velocity_quant/{sample}'
+    log: "logs/correct_sort_velocyto_{sample}.out"
+    threads: 10
+    conda: CONDA_SHARED_ENV
+    shell:
+        """
+        mkdir -p {params.outdir};
+        bustools correct -w "{input.whitelist}" \
+        -o {params.outdir}/output.correct.bus {input.busfile} > {log} 2>&1;
+        bustools sort -t {threads} -o {output} {params.outdir}/output.correct.bus >> {log};
+        rm {params.outdir}/output.correct.bus
+        """
 ## bustools v 0.39.3
 ## for spliced counts, we subset the bus file to get the complement of the "introns" transcript set
 rule spliced_capture:
