@@ -19,12 +19,12 @@ rule FastQC:
         "FASTQ/{sample}{read}.fastq.gz"
     output:
         "FASTQ/FastQC/{sample}{read}_fastqc.html"
-    log:
-        out = "logs/FastQC.{sample}{read}.out",
-        err = "logs/FastQC.{sample}{read}.err"
+    params:
+        out = "FASTQ/FastQC"
+    log: "logs/FastQC.{sample}{read}.out"
     threads: 2
     conda: CONDA_SHARED_ENV
-    shell: "fastqc -o FastQC {input} > {log.out} 2> {log.err}"
+    shell: "fastqc -o {params.out} {input} 2> {log} 2>&1"
 
 if downsample:
     rule FASTQdownsample:
