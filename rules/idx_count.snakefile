@@ -1,8 +1,7 @@
-
 # wget ftp://ftp.ensembl.org/pub/release-95/fasta/mus_musculus/cdna/Mus_musculus.GRCm38.cdna.all.fa.gz
 
 rule create_whitelist:
-    input: barcode_tsv #/hpc/hub_oudenaarden/vbhardwaj/annotations/celseq2_barcodes.csv
+    input: barcode_tsv
     output: temp("whitelist_barcodes.txt")
     shell: "cut -f2 {input} > {output}"
 

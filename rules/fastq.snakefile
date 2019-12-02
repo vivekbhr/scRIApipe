@@ -4,7 +4,7 @@ rule FASTQ1:
       output:
           "FASTQ/{sample}"+reads[0]+".fastq.gz"
       shell:
-          "( [ -f {output} ] || ln -s {input} {output} )"
+          "( [ -f {output} ] || ln -s -r {input} {output} )"
 
 rule FASTQ2:
       input:
@@ -12,7 +12,7 @@ rule FASTQ2:
       output:
           "FASTQ/{sample}"+reads[1]+".fastq.gz"
       shell:
-          "( [ -f {output} ] || ln -s {input} {output} )"
+          "( [ -f {output} ] || ln -s -r {input} {output} )"
 
 rule FastQC:
     input:
