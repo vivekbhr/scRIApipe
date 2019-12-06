@@ -51,7 +51,7 @@ rule transcript_map:
     params:
         outdir = "transcripts_quant/{sample}",
         kallisto = os.path.join(workflow.basedir, "tools", "kallisto"),
-        protocol = 'VASASeq'
+        protocol = protocol
     log:
         out = "logs/transcript_map.{sample}.out",
         err = "logs/transcript_map.{sample}.err"
@@ -90,11 +90,12 @@ rule get_tcc:
          mtx = "transcripts_quant/{sample}/eq_counts/tcc.mtx",
          txt = "transcripts_quant/{sample}/eq_counts/tcc.ec.txt"
     params:
-        out = "transcripts_quant/{sample}/eq_counts/tcc"
+        out = "transcripts_quant/{sample}/eq_counts/tcc",
+        bustools = os.path.join(workflow.basedir, "tools", "bustools")
     log: "logs/get_tcc_{sample}.out"
     threads: 1
     conda: CONDA_SHARED_ENV
-    shell:  "bustools count -o {params.out} -g {input.t2g} -e {input.mtx} -t {input.transcripts} {input.busfile} > {log} 2>&1"
+    shell:  "{params.bustools} count -o {params.out} -g {input.t2g} -e {input.mtx} -t {input.transcripts} {input.busfile} > {log} 2>&1"
 
 rule get_geneCounts:
     input:
@@ -105,11 +106,12 @@ rule get_geneCounts:
     output:
          mtx = "transcripts_quant/{sample}/gene_counts/gene.mtx"
     params:
-        out = "transcripts_quant/{sample}/gene_counts/gene"
+        out = "transcripts_quant/{sample}/gene_counts/gene",
+        bustools = os.path.join(workflow.basedir, "tools", "bustools")
     log: "logs/get_geneCounts_{sample}.out"
     threads: 1
     conda: CONDA_SHARED_ENV
-    shell:  "bustools count --genecounts -o {params.out} -g {input.t2g} -e {input.mtx} -t {input.transcripts} {input.busfile} > {log} 2>&1"
+    shell:  "{params.bustools} count --genecounts -o {params.out} -g {input.t2g} -e {input.mtx} -t {input.transcripts} {input.busfile} > {log} 2>&1"
 
 rule get_counts_txt:
     input:

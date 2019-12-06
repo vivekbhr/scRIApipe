@@ -27,7 +27,7 @@ rule velocity_map:
     params:
         outdir = "velocity_quant/{sample}",
         kallisto = os.path.join(workflow.basedir, "tools", "kallisto"),
-        protocol = 'VASASeq'
+        protocol = protocol
     log:
         out = "logs/velocity_map.{sample}.out",
         err = "logs/velocity_map.{sample}.err"
