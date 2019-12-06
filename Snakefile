@@ -65,6 +65,8 @@ def runTrimming(trim):
 def runVelocity():
     if velocity:
         file_list = [
+    "annotations/cDNA_introns.fa",
+    "annotations/cDNA_introns.idx",
     expand("velocity_quant/{sample}/output.correct.sort.bus", sample = samples),
     expand("velocity_quant/{sample}/spliced.bus", sample = samples),
     expand("velocity_quant/{sample}/unspliced.bus", sample = samples),
@@ -86,12 +88,10 @@ rule all:
     input:
         runTrimming(trim),
         expand("FASTQ/FastQC/{sample}{read}_fastqc.html", sample = samples, read=reads),
-        "annotations/cDNA_introns.fa",
         "annotations/cDNA_tx_to_capture.txt",
         "annotations/tr2g.tsv",
         "annotations/gtf.txdb",
         "annotations/cDNA.all.idx",
-        "annotations/cDNA_introns.idx",
         expand("transcripts_quant/{sample}/output.correct.sort.bus", sample = samples),
         expand("transcripts_quant/{sample}/eq_counts/tcc.mtx", sample = samples),
         expand("transcripts_quant/{sample}/gene_counts/gene.mtx", sample = samples),
