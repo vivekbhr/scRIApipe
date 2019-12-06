@@ -54,10 +54,33 @@ make
 If there are no errors, copy the kallisto binary to the scRIApipe tools folder (if error, look for help)
 
 ```
-cp kallisto <scRIApipe>/tools/
+cp kallisto <scRIApipe_folder>/tools/
 ```
 
-5. Workflow is now set, do the following to run the Workflow
+5. Test bustools binary
+
+I provided a compiled bustools with the workflow. Check that it works by trying
+
+```
+cd tools && kallisto
+```
+
+If the help appears, we are set! If not, we need to recompile bustools for your system. Do the following (outside of scRIApipe directory):
+
+```
+git clone https://github.com/BUStools/bustools.git
+cd bustools && git checkout devel
+mkdir build && cd build && cmake ..
+make
+```
+
+If there are no errors, copy the bustools binary to the scRIApipe tools folder (if error, look for help)
+
+```
+cp bustools <scRIApipe_folder>/tools/
+```
+
+6. Workflow is now set, do the following to run the Workflow
 
 ```
 conda activate scria
