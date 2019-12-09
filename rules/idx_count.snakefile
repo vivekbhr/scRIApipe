@@ -21,8 +21,8 @@ rule prep_annotation:
         script=os.path.join(workflow.basedir, "tools", "velocyto_indexing.R"),
         outdir = "annotations"
     log:
-        out = "logs/prep_velocyto.out",
-        err = "logs/prep_velocyto.err"
+        out = "logs/prep_annotation.out",
+        err = "logs/prep_annotation.err"
     threads: 2
     conda: CONDA_SHARED_ENV
     shell: "{params.script} {params.genome} {input} {params.readLength} {params.outdir} > {log.out} 2> {log.err}"

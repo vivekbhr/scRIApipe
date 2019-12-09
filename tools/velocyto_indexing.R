@@ -7,12 +7,12 @@ readLength <- as.numeric(Args[3])
 outdir <- Args[4] #"../01_annotations/ens95_velocyto_collapse"
 
 ## install required packages
-if (!require(devtools)) {
-  install.packages("devtools")
-}
-if (!require(BiocManager)) {
-  install.packages("BiocManager")
-}
+#if (!require(devtools)) {
+#  install.packages("devtools")
+#}
+#if (!require(BiocManager)) {
+#  install.packages("BiocManager")
+#}
 # Install from GitHub
 #BiocManager::install(c("BSgenome", "GenomicFeatures", "AnnotationDbi", "AnnotationHub", "pcaMethods"))
 
