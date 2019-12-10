@@ -24,6 +24,10 @@ def write_configfile(configFile, config):
     with open(configFile, 'w') as f:
         yaml.dump(config, f, default_flow_style=False)
 
+def get_current_condaEnv():
+    env = os.environ['CONDA_PREFIX']
+    return(env)
+
 def commonYAMLandLogs(baseDir, args, callingScript):
     """
     Merge dictionaries, write YAML files, construct the snakemake command
@@ -174,7 +178,7 @@ def parse_args(defaults=None):
 
     parser.add_argument("-cd", "--conda-dir",
                          dest="conda_dir",
-                         default='',
+                         default=get_current_condaEnv(),
                          help="path to the conda directory where scRIA is installed (used only if --cluster is specified) (default: '%(default)s')")
 
     parser.add_argument("-j", "--jobs",
