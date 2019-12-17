@@ -46,6 +46,7 @@ samples = get_sample_names(infiles,ext,reads)
 ################################################################################
 include: os.path.join(workflow.basedir, "rules", "fastq.snakefile")
 include: os.path.join(workflow.basedir, "rules", "idx_count.snakefile")
+include: os.path.join(workflow.basedir, "rules", "tcc_clustering.snakefile")
 
 if velocity:
     include: os.path.join(workflow.basedir, "rules", "velocity.snakefile")
@@ -96,6 +97,10 @@ rule all:
         expand("transcripts_quant/{sample}/eq_counts/tcc.mtx", sample = samples),
         expand("transcripts_quant/{sample}/gene_counts/gene.mtx", sample = samples),
         expand("transcripts_quant/{sample}/output.txt", sample = samples),
+        expand("transcripts_quant/{sample}/eq_counts/ECtoGene_map.txt", sample = samples),
+        "transcripts_quant/TCCs_filtered_merged.mtx",
+        "transcripts_quant/ECs_filtered_merged.txt",
+        "transcripts_quant/barcodes_merged.txt",
         runVelocity()
 
 ### execute after workflow finished ############################################

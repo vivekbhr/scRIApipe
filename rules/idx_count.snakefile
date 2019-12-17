@@ -67,8 +67,8 @@ rule correct_sort:
     params:
         outdir = 'transcripts_quant/{sample}'
     log:
-        out = "logs/correct_sort_{sample}.out",
-        err = "logs/correct_sort_{sample}.err"
+        out = "logs/correct_sort.{sample}.out",
+        err = "logs/correct_sort.{sample}.err"
     threads: 10
     conda: CONDA_SHARED_ENV
     shell:
@@ -88,7 +88,8 @@ rule get_tcc:
         busfile = "transcripts_quant/{sample}/output.correct.sort.bus"
     output:
          mtx = "transcripts_quant/{sample}/eq_counts/tcc.mtx",
-         txt = "transcripts_quant/{sample}/eq_counts/tcc.ec.txt"
+         txt = "transcripts_quant/{sample}/eq_counts/tcc.ec.txt",
+         bc = "transcripts_quant/{sample}/eq_counts/tcc.barcodes.txt"
     params:
         out = "transcripts_quant/{sample}/eq_counts/tcc",
         bustools = os.path.join(workflow.basedir, "tools", "bustools")
@@ -108,7 +109,7 @@ rule get_geneCounts:
     params:
         out = "transcripts_quant/{sample}/gene_counts/gene",
         bustools = os.path.join(workflow.basedir, "tools", "bustools")
-    log: "logs/get_geneCounts_{sample}.out"
+    log: "logs/get_geneCounts.{sample}.out"
     threads: 1
     conda: CONDA_SHARED_ENV
     shell:  "{params.bustools} count --genecounts -o {params.out} -g {input.t2g} -e {input.mtx} -t {input.transcripts} {input.busfile} > {log} 2>&1"
@@ -118,7 +119,7 @@ rule get_counts_txt:
         "transcripts_quant/{sample}/output.correct.sort.bus"
     output:
         "transcripts_quant/{sample}/output.txt"
-    log: "logs/get_counts_{sample}.out",
+    log: "logs/get_counts.{sample}.out",
     threads: 1
     conda: CONDA_SHARED_ENV
     shell: "bustools text -o {output} {input} > {log}"
