@@ -87,11 +87,11 @@ rule get_tcc:
         transcripts = "transcripts_quant/{sample}/transcripts.txt",
         busfile = "transcripts_quant/{sample}/output.correct.sort.bus"
     output:
-         mtx = "transcripts_quant/{sample}/eq_counts/tcc.mtx",
-         txt = "transcripts_quant/{sample}/eq_counts/tcc.ec.txt",
-         bc = "transcripts_quant/{sample}/eq_counts/tcc.barcodes.txt"
+         mtx = "transcripts_quant/{sample}/eq_counts/output.mtx",
+         txt = "transcripts_quant/{sample}/eq_counts/output.ec.txt",
+         bc = "transcripts_quant/{sample}/eq_counts/output.barcodes.txt"
     params:
-        out = "transcripts_quant/{sample}/eq_counts/tcc",
+        out = "transcripts_quant/{sample}/eq_counts/",
         bustools = os.path.join(workflow.basedir, "tools", "bustools")
     log: "logs/get_tcc_{sample}.out"
     threads: 1
