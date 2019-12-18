@@ -11,7 +11,13 @@ out_ec_to_gene <- Args[4] # output "EC to gene map"
 
 ## convert ec to tx map to ec to gene map
 tr2g <- read.delim(tr2g, header = FALSE, stringsAsFactors = FALSE)
-colnames(tr2g) <- c("tx_id", "gene_id", "gene_name", "biotype")
+n <- c("tx_id", "gene_id")
+
+if(ncol(tr2g) == 4) {
+    n <- c(n, "gene_name", "biotype")
+  }
+
+colnames(tr2g) <- n
 
 tx_ids <- read.delim(transcript_list, header = FALSE, stringsAsFactors = FALSE)
 tx_ids$gene_id <- tr2g[match(tx_ids$V1, tr2g$tx_id), "gene_id"]
