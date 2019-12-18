@@ -7,8 +7,7 @@ Args <- commandArgs(trailingOnly = TRUE)
 tr2g <- Args[1] # "annotations/tr2g.tsv"
 transcript_list <- Args[2] # "transcripts_quant/{sample}/transcripts.txt"
 ec_to_tr <- Args[3] # "transcripts_quant/{sample}/eq_counts/tcc.ec.txt"
-tcc_mtx <- Args[4] # "transcripts_quant/{sample}/eq_counts/tcc.mtx"
-out_ec_to_gene <- Args[5] # "EC to gene map"
+out_ec_to_gene <- Args[4] # output "EC to gene map"
 
 ## convert ec to tx map to ec to gene map
 tr2g <- read.delim(tr2g, header = FALSE, stringsAsFactors = FALSE)

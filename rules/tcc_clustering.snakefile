@@ -56,8 +56,8 @@ rule merge_TCCs:
     params:
         rscript = os.path.join(workflow.basedir, "tools", "merge_tcc_mtx.R"),
         ecToGeneList = ",".join(expand("transcripts_quant/{sample}/eq_counts/ECtoGene_map.txt", sample = samples)),
-        mtxList = ",".join(expand("transcripts_quant/{sample}/eq_counts/tcc.mtx", sample = samples)),
-        bcList = ",".join(expand("transcripts_quant/{sample}/eq_counts/tcc.barcodes.txt", sample = samples)),
+        mtxList = ",".join(expand("transcripts_quant/{sample}/eq_counts/output.mtx", sample = samples)),
+        bcList = ",".join(expand("transcripts_quant/{sample}/eq_counts/output.barcodes.txt", sample = samples)),
         samples = ",".join(expand("{sample}", sample = samples))
     log: "logs/merge_TCCs.out"
     threads: 1
