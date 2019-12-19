@@ -39,4 +39,4 @@ subset_mtxList <- mapply(function(mtx,ec){
 
 writeMM(Reduce(rbind, subset_mtxList), file = out_mtx)
 write.table(eclist2, file = out_ec, sep = "\t", row.names = F, col.names = F, quote = F)
-write.table(Reduce(rbind, bclist), file = out_bc, sep = "", row.names = F, col.names = F, quote = F)
+write.table(Reduce(rbind, bclist), file = out_bc, sep = "\n", row.names = F, col.names = F, quote = F)
