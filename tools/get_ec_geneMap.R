@@ -24,7 +24,7 @@ tx_ids$gene_id <- tr2g[match(tx_ids$V1, tr2g$tx_id), "gene_id"]
 
 ## read an EC matrix and map EC to genes
 cf <- count.fields(file(ec_to_tr), sep = ",")
-no_col <- max(cf) #- 1
+no_col <- max(cf) + 1
 #no_row <- length(cf)
 
 ## map EC to genes,
