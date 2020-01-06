@@ -32,7 +32,7 @@ bclist <- mapply(function(x,y) paste(x, y$V1, sep = "_"), samples, bclist)
 ## subset all matrices based on the merged EClist and merge them
 subset_mtxList <- mapply(function(mtx,ec){
   ec_counts <- readMM(mtx)
-  return(ec_counts[, ec])
+  return(ec_counts[, ec + 1])# added 1 again, as the EC ids are 0-indexed
 }, matrixFileList, eclist1)
 
 writeMM(Reduce(rbind, subset_mtxList), file = out_mtx)
