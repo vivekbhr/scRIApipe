@@ -30,14 +30,14 @@ rule prep_annotation:
 rule transcript_index:
     input: cdna_fasta
     output: "annotations/cDNA.all.idx"
-    params:
-        kallisto = os.path.join(workflow.basedir, "tools", "kallisto")
+#    params:
+#        kallisto = os.path.join(workflow.basedir, "tools", "kallisto")
     log:
         out = "logs/transcript_index.out",
         err = "logs/transcript_index.err"
     threads: 1
     conda: CONDA_SHARED_ENV
-    shell: "{params.kallisto} index -i {output} -k 31 {input} > {log.out} 2> {log.err}"
+    shell: "kallisto index -i {output} -k 31 {input} > {log.out} 2> {log.err}"
 
 rule transcript_map:
     input:
@@ -50,14 +50,13 @@ rule transcript_map:
         transcripts = "transcripts_quant/{sample}/transcripts.txt"
     params:
         outdir = "transcripts_quant/{sample}",
-        kallisto = os.path.join(workflow.basedir, "tools", "kallisto"),
-        protocol = protocol
+        protocol = "0,6,14:0,0,6:1,0,0" if protocol is VASASeq else protocol
     log:
         out = "logs/transcript_map.{sample}.out",
         err = "logs/transcript_map.{sample}.err"
     threads: 10
     conda: CONDA_SHARED_ENV
-    shell: "{params.kallisto} bus -i {input.idx} -x {params.protocol} -t {threads} -o {params.outdir} {input.R1} {input.R2} > {log.out} 2> {log.err}"
+    shell: "kallisto bus -i {input.idx} -x {params.protocol} -t {threads} -o {params.outdir} {input.R1} {input.R2} > {log.out} 2> {log.err}"
 
 rule correct_sort:
     input:
@@ -119,7 +118,7 @@ rule get_counts_txt:
         "transcripts_quant/{sample}/output.correct.sort.bus"
     output:
         "transcripts_quant/{sample}/output.txt"
-    log: "logs/get_counts.{sample}.out",
+    log: "logs/get_counts.{sample}.out"
     threads: 1
     conda: CONDA_SHARED_ENV
     shell: "bustools text -o {output} {input} > {log}"

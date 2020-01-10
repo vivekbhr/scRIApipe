@@ -16,9 +16,9 @@ outdir <- Args[4] #"../01_annotations/ens95_velocyto_collapse"
 # Install from GitHub
 #BiocManager::install(c("BSgenome", "GenomicFeatures", "AnnotationDbi", "AnnotationHub", "pcaMethods"))
 
-if (!require(BUSpaRse)) {
-devtools::install_github("BUStools/BUSpaRse")
-}
+#if (!require(BUSpaRse)) {
+#devtools::install_github("BUStools/BUSpaRse")
+#}
 
 ## load appropriate bsgenome
 message("Loading genome")

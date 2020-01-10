@@ -20,7 +20,7 @@ samples <- trimws(unlist(strsplit(samples, ",", fixed = TRUE)))
 ## merge the EC map list based on the contained transcripts
 eclist <- lapply(ecMapList, read.delim, header = FALSE,
                  col.names = c("EC", "Gene", "TxSet"), stringsAsFactors = FALSE)
-eclist <- Reduce(function(x,y) merge(x, y, by = "TxSet"), eclist)
+eclist <- na.omit(Reduce(function(x,y) merge(x, y, by = "TxSet"), eclist))
 
 eclist1 <- eclist[ , grepl("EC", colnames(eclist))]
 eclist2 <- cbind(eclist[,c("Gene.x", "TxSet")], eclist1)
