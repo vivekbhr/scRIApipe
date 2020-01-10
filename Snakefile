@@ -95,7 +95,7 @@ rule all:
         "annotations/cDNA.all.idx",
         expand("transcripts_quant/{sample}/output.correct.sort.bus", sample = samples),
         expand("transcripts_quant/{sample}/eq_counts/output.mtx", sample = samples),
-        expand("transcripts_quant/{sample}/gene_counts/gene.mtx", sample = samples),
+        expand("transcripts_quant/{sample}/gene_counts/output.mtx", sample = samples),
         expand("transcripts_quant/{sample}/output.txt", sample = samples),
         expand("transcripts_quant/{sample}/eq_counts/ECtoGene_map.txt", sample = samples),
         "transcripts_quant/TCCs_filtered_merged.mtx",

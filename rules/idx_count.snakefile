@@ -50,7 +50,7 @@ rule transcript_map:
         transcripts = "transcripts_quant/{sample}/transcripts.txt"
     params:
         outdir = "transcripts_quant/{sample}",
-        protocol = "0,6,14:0,0,6:1,0,0" if protocol is VASASeq else protocol
+        protocol = "0,6,14:0,0,6:1,0,0" if protocol == 'VASASeq' else protocol
     log:
         out = "logs/transcript_map.{sample}.out",
         err = "logs/transcript_map.{sample}.err"
@@ -104,9 +104,9 @@ rule get_geneCounts:
         transcripts = "transcripts_quant/{sample}/transcripts.txt",
         busfile = "transcripts_quant/{sample}/output.correct.sort.bus"
     output:
-         mtx = "transcripts_quant/{sample}/gene_counts/gene.mtx"
+         mtx = "transcripts_quant/{sample}/gene_counts/output.mtx"
     params:
-        out = "transcripts_quant/{sample}/gene_counts/gene",
+        out = "transcripts_quant/{sample}/gene_counts/",
         bustools = os.path.join(workflow.basedir, "tools", "bustools")
     log: "logs/get_geneCounts.{sample}.out"
     threads: 1
