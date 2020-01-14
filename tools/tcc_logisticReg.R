@@ -4,6 +4,12 @@
 library(Matrix)
 library(ggplot2)
 Args <- commandArgs(trailingOnly = TRUE)
+## test Args
+Args <- c("transcripts_quant/TCCs_filtered_merged.mtx", 
+          "transcripts_quant/barcodes_merged.txt", 
+          "transcripts_quant/ECs_filtered_merged.txt",
+          "annotations/tr2g.tsv",
+          0.1, "DTU_testing/ES_NPC_logisticReg")
 
 ## INPUT ARGS
 tcc.mtx <- readMM(Args[1]) # "ESC_NPC_merged.tcc.mtx"
@@ -20,13 +26,20 @@ outprefix <- Args[6]
 rownames(tcc.mtx) <- bc
 # colnames = gene name (non-unique)
 colnames(tcc.mtx) <- ecmap$V1
-tcc.mtx[,"ENSMUSG00000031575.18"]
+colSums(tcc.mtx[,"ENSMUSG00000031575.18", drop = FALSE])
 
 # keep track of associated txSet
 kept_ecs <- colSums(tcc.mtx) > 10
 tcc.mtx <- tcc.mtx[rowSums(tcc.mtx) > 50, kept_ecs]
 #tcc.mtx <- tcc.mtx[rowSums(tcc.mtx) > 50, colSums(tcc.mtx) > 10]
 ecmap <- ecmap[kept_ecs, ]
+
+tcc.pc <- irlba::irlba(tcc.mtx, nv = 50)
+tcc.pc$u %*% diag(tcc.pc$d) %>% uwot::umap() %>% as.data.frame() -> final.umap
+colnames(final.umap) <- c("UMAP1", "UMAP2")
+final.umap$cell <- as.factor(gsub("(.*)_[AGTC]*", "\\1", rownames(tcc.mtx)))
+final.umap$cell <- as.factor(gsub("(ESC|NPC)_.*", "\\1", rownames(tcc.mtx)))
+ggplot(final.umap, aes(UMAP1, UMAP2, col = cell)) + geom_point()
 
 ## logistic-reg + LRT per gene
 lrt_gene <- function(gene, tcc_mtx) {

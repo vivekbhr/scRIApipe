@@ -17,6 +17,7 @@ matrixFileList <- trimws(unlist(strsplit(matrixFileList, ",", fixed = TRUE)))
 ecMapList <- trimws(unlist(strsplit(ecMapList, ",", fixed = TRUE)))
 bclist <- trimws(unlist(strsplit(bclist, ",", fixed = TRUE)))
 samples <- trimws(unlist(strsplit(samples, ",", fixed = TRUE)))
+
 ## merge the EC map list based on the contained transcripts
 eclist <- lapply(ecMapList, read.delim, header = FALSE,
                  col.names = c("EC", "Gene", "TxSet"), stringsAsFactors = FALSE)
@@ -27,10 +28,10 @@ eclist2 <- cbind(eclist[,c("Gene.x", "TxSet")], eclist1)
 
 ## merge barcodes
 bclist <- lapply(bclist, read.table, header = FALSE, stringsAsFactors = F)
-bclist <- mapply(function(x,y) paste(x, y$V1, sep = "_"), samples, bclist)
+bclist <- lapply(seq_along(bclist), function(n) paste(samples[n], bclist[[n]]$V1, sep = "_"))
 
 ## subset all matrices based on the merged EClist and merge them
-subset_mtxList <- mapply(function(mtx,ec){
+subset_mtxList <- mapply(function(mtx, ec){
   ec_counts <- readMM(mtx)
   return(ec_counts[, ec + 1])# added 1 again, as the EC ids are 0-indexed
 }, matrixFileList, eclist1)
