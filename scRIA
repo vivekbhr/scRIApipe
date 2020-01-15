@@ -188,6 +188,18 @@ def parse_args(defaults=None):
                          type=int,
                          default=10)
 
+    parser.add_argument("-ti", "--transcript-index",
+                         dest="t_idx",
+                         type=str,
+                         help="supply transcript index instead of creating one with kallisto",
+                         default=None)
+
+    parser.add_argument("-vi", "--velocity-index",
+                         dest="v_idx",
+                         type=str,
+                         help="supply velocity index instead of creating one with kallisto",
+                         default=None)
+
     parser.add_argument("-h", "--help",
                          action="help",
                          help="show this help message and exit")
