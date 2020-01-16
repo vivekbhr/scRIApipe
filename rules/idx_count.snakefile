@@ -50,7 +50,7 @@ rule transcript_map:
         transcripts = "transcripts_quant/{sample}/transcripts.txt"
     params:
         outdir = "transcripts_quant/{sample}",
-        protocol = "0,6,14:0,0,6:1,0,0" if protocol == 'VASASeq' else protocol
+        protocol = lambda wildcards: "0,6,14:0,0,6:1,0,0" if protocol is 'VASASeq' else protocol
     log:
         out = "logs/transcript_map.{sample}.out",
         err = "logs/transcript_map.{sample}.err"

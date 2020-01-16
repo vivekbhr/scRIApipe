@@ -24,7 +24,7 @@ rule velocity_map:
         transcripts = "velocity_quant/{sample}/transcripts.txt"
     params:
         outdir = "velocity_quant/{sample}",
-        protocol = "0,6,14:0,0,6:1,0,0" if protocol == 'VASASeq' else protocol
+        protocol = lambda wildcards: "0,6,14:0,0,6:1,0,0" if protocol == 'VASASeq' else protocol
     log:
         out = "logs/velocity_map.{sample}.out",
         err = "logs/velocity_map.{sample}.err"

@@ -147,7 +147,7 @@ def parse_args(defaults=None):
                           dest="protocol",
                           required=False,
                           help="scRNA-seq protocol used. (default: '%(default)s')",
-                          default=None)#'VASASeq'
+                          default='VASASeq')
 
     parser.add_argument("-vl", "--velocity",
                           dest="velocity",
