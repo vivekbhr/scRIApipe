@@ -15,7 +15,7 @@ if v_idx is None:
         conda: CONDA_SHARED_ENV
         shell: "{params.kallisto} index -i {output} -k 31 {input} > {log.out} 2> {log.err}"
 elif v_idx is not None and os.path.isfile(v_idx):
-    rule velocity_index:
+    rule velocity_index_link:
         input: v_idx
         output: "annotations/cDNA_introns.idx"
         log:

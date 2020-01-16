@@ -40,7 +40,7 @@ if t_idx is None:
         conda: CONDA_SHARED_ENV
         shell: "kallisto index -i {output} -k 31 {input} > {log.out} 2> {log.err}"
 elif t_idx is not None and os.path.isfile(t_idx):
-    rule make_index_link:
+    rule transcript_index_link:
         input: t_idx
         output: "annotations/cDNA.all.idx"
         log:

@@ -191,12 +191,14 @@ def parse_args(defaults=None):
     parser.add_argument("-ti", "--transcript-index",
                          dest="t_idx",
                          type=str,
+                         required=False,
                          help="supply transcript index instead of creating one with kallisto",
                          default=None)
 
     parser.add_argument("-vi", "--velocity-index",
                          dest="v_idx",
                          type=str,
+                         required=False,
                          help="supply velocity index instead of creating one with kallisto",
                          default=None)
 
