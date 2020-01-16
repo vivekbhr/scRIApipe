@@ -5,14 +5,12 @@ rule velocity_index:
         "annotations/cDNA_introns.fa"
     output:
         "annotations/cDNA_introns.idx"
-    params:
-        kallisto = os.path.join(workflow.basedir, "tools", "kallisto")
     log:
         out = "logs/velocity_index.out",
         err = "logs/velocity_index.err"
     threads: 1
     conda: CONDA_SHARED_ENV
-    shell: "{params.kallisto} index -i {output} -k 31 {input} > {log.out} 2> {log.err}"
+    shell: "kallisto index -i {output} -k 31 {input} > {log.out} 2> {log.err}"
 
 ### Velocity mapping (to combined cDNA-intron index)
 rule velocity_map:
