@@ -27,17 +27,27 @@ rule prep_annotation:
     conda: CONDA_SHARED_ENV
     shell: "{params.script} {params.genome} {input} {params.readLength} {params.outdir} > {log.out} 2> {log.err}"
 
-rule transcript_index:
-    input: cdna_fasta
-    output: "annotations/cDNA.all.idx"
-#    params:
-#        kallisto = os.path.join(workflow.basedir, "tools", "kallisto")
-    log:
-        out = "logs/transcript_index.out",
-        err = "logs/transcript_index.err"
-    threads: 1
-    conda: CONDA_SHARED_ENV
-    shell: "kallisto index -i {output} -k 31 {input} > {log.out} 2> {log.err}"
+if t_idx is None:
+    rule transcript_index:
+        input: cdna_fasta
+        output: "annotations/cDNA.all.idx"
+    #    params:
+    #        kallisto = os.path.join(workflow.basedir, "tools", "kallisto")
+        log:
+            out = "logs/transcript_index.out",
+            err = "logs/transcript_index.err"
+        threads: 1
+        conda: CONDA_SHARED_ENV
+        shell: "kallisto index -i {output} -k 31 {input} > {log.out} 2> {log.err}"
+elif t_idx is not None and os.path.isfile(t_idx):
+    rule transcript_index_link:
+        input: t_idx
+        output: "annotations/cDNA.all.idx"
+        log:
+            out = "logs/transcript_index.out",
+            err = "logs/transcript_index.err"
+        conda: CONDA_SHARED_ENV
+        shell: "ln -s {input} {output} > {log.out} 2> {log.err}"
 
 rule transcript_map:
     input:
