@@ -98,9 +98,11 @@ rule all:
         expand("transcripts_quant/{sample}/gene_counts/output.mtx", sample = samples),
         expand("transcripts_quant/{sample}/output.txt", sample = samples),
         expand("transcripts_quant/{sample}/eq_counts/ECtoGene_map.txt", sample = samples),
-        "transcripts_quant/TCCs_filtered_merged.mtx",
-        "transcripts_quant/ECs_filtered_merged.txt",
-        "transcripts_quant/barcodes_merged.txt",
+        "clustering_tcc/preprocessed.tsv",
+        "clustering_tcc/cluster.tsv",
+        "clustering_tcc/barcode_cluster.tsv",
+        "clustering_tcc/preprocessed.pdf",
+        "clustering_tcc/clustering.pdf",
         runVelocity()
 
 ### execute after workflow finished ############################################

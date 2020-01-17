@@ -65,3 +65,23 @@ rule merge_TCCs:
     shell:
         "Rscript {params.rscript} {params.mtxList} {params.ecToGeneList} {params.bcList} {params.samples} \
          {output.mtx} {output.ECmap} {output.bc} 2> {log} 2>&1"
+
+rule cluster_tcc:
+    input:
+        mtx = "transcripts_quant/TCCs_filtered_merged.mtx",
+        ECmap = "transcripts_quant/ECs_filtered_merged.txt",
+        bc = "transcripts_quant/barcodes_merged.txt"
+    output:
+        preprocessed = "clustering_tcc/preprocessed.tsv",
+        cluster = "clustering_tcc/cluster.tsv",
+        cl_bc = "clustering_tcc/barcode_cluster.tsv",
+        preprocessed_fig = "clustering_tcc/preprocessed.pdf",
+        cluster_fig = "clustering_tcc/clustering.pdf"
+    params:
+        clustering = os.path.join(workflow.basedir, "tools", "clustering_wrapper.py"),
+        out_dir = "clustering_tcc"
+    log: "logs/cluster_tcc.out"
+    threads: 1
+    conda: CONDA_SHARED_ENV
+    shell:
+        "{params.clustering} -o {params.out_dir} -s {input.mtx} -b {input.bc} -v {input.ECmap} -dt 'tcc' > {log} 2>&1"
