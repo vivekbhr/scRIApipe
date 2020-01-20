@@ -9,7 +9,8 @@ rule create_whitelist:
 rule prep_annotation:
     input: input_gtf
     output:
-        fa = "annotations/cDNA_introns.fa",
+        velocity_fa = "annotations/cDNA_introns.fa",
+        cDNA_fa = "annotations/cDNA.fa",
         cdna = "annotations/cDNA_tx_to_capture.txt",
         introns = "annotations/introns_tx_to_capture.txt",
         tr2g = "annotations/tr2g.tsv",
@@ -17,7 +18,7 @@ rule prep_annotation:
     params:
         genome = genome_id,
         readLength = read_length,
-        script=os.path.join(workflow.basedir, "tools", "velocyto_indexing.R"),
+        script=os.path.join(workflow.basedir, "tools", "prep_annotation.R"),
         outdir = "annotations"
     log:
         out = "logs/prep_annotation.out",
@@ -27,10 +28,8 @@ rule prep_annotation:
     shell: "{params.script} {params.genome} {input} {params.readLength} {params.outdir} > {log.out} 2> {log.err}"
 
 rule transcript_index:
-    input: cdna_fasta
+    input: "annotations/cDNA.fa"
     output: "annotations/cDNA.all.idx"
-#    params:
-#        kallisto = os.path.join(workflow.basedir, "tools", "kallisto")
     log:
         out = "logs/transcript_index.out",
         err = "logs/transcript_index.err"
