@@ -11,7 +11,7 @@ velocity_map:
 transcript_index:
     memory: 80G
 velocity_index:
-    memory: 80G
+    memory: 100G
 get_tcc:
     memory: 40G
 get_geneCounts:

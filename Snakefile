@@ -91,7 +91,7 @@ rule all:
         expand("FASTQ/FastQC/{sample}{read}_fastqc.html", sample = samples, read=reads),
         "annotations/cDNA_tx_to_capture.txt",
         "annotations/tr2g.tsv",
-        "annotations/gtf.txdb",
+        #"annotations/gtf.txdb",
         "annotations/cDNA.all.idx",
         expand("transcripts_quant/{sample}/output.correct.sort.bus", sample = samples),
         expand("transcripts_quant/{sample}/eq_counts/output.mtx", sample = samples),
