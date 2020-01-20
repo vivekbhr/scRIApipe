@@ -58,10 +58,11 @@ rule merge_TCCs:
         ecToGeneList = ",".join(expand("transcripts_quant/{sample}/eq_counts/ECtoGene_map.txt", sample = samples)),
         mtxList = ",".join(expand("transcripts_quant/{sample}/eq_counts/output.mtx", sample = samples)),
         bcList = ",".join(expand("transcripts_quant/{sample}/eq_counts/output.barcodes.txt", sample = samples)),
-        samples = ",".join(expand("{sample}", sample = samples))
+        samples = ",".join(expand("{sample}", sample = samples)),
+        mergeBy = "TxSet"
     log: "logs/merge_TCCs.out"
     threads: 1
     conda: CONDA_SHARED_ENV
     shell:
-        "Rscript {params.rscript} {params.mtxList} {params.ecToGeneList} {params.bcList} {params.samples} \
+        "Rscript {params.rscript} {params.mtxList} {params.ecToGeneList} {params.bcList} {params.samples} {params.mergeBy} \
          {output.mtx} {output.ECmap} {output.bc} 2> {log} 2>&1"
