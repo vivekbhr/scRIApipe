@@ -84,5 +84,5 @@ rule cluster_tcc:
     threads: 1
     conda: CONDA_SHARED_ENV
     shell:
-        "echo {col_groups} && {params.clustering} -o {params.out_dir} -s {input.mtx} -b {input.bc} -v {input.ECmap} \
+        "{params.clustering} -o {params.out_dir} -s {input.mtx} -b {input.bc} -v {input.ECmap} \
         --cells 5 --count 20 --genes 100 --dispersity 0.5 --normalize 1e6 -g {col_groups} > {log} 2>&1"
