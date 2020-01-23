@@ -247,6 +247,10 @@ def main():
     sc.settings.figdir = outdir
     sc.settings.autoshow = False
 
+    # correct for passing 'None' by
+    if args.col_groups == 'None':
+        args.col_groups = None
+    
     # get matrix
     print("get matrix")
     adata, group_keys = get_matrix(args.sample, outdir, args.barcodes, args.varlist, args.col_groups)
