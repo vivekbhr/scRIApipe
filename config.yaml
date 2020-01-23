@@ -6,7 +6,7 @@ reads: ["_R1","_R2"]
 ## downsample fastq to the given number before alignment
 downsample:
 ## Trim the reads? (must-do for raw VASA-seq)
-trim: True
+trim: False
 ## options for cutadapt
 trimmerOptions: "-b W{'10'} -B W{'10'}"
 ## UCSC ID of the genome (used to fetch tx sequences)

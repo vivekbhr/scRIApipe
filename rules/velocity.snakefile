@@ -6,14 +6,12 @@ if v_idx is None:
             "annotations/cDNA_introns.fa"
         output:
             "annotations/cDNA_introns.idx"
-        params:
-            kallisto = os.path.join(workflow.basedir, "tools", "kallisto")
         log:
             out = "logs/velocity_index.out",
             err = "logs/velocity_index.err"
         threads: 1
         conda: CONDA_SHARED_ENV
-        shell: "{params.kallisto} index -i {output} -k 31 {input} > {log.out} 2> {log.err}"
+        shell: "kallisto index -i {output} -k 31 {input} > {log.out} 2> {log.err}"
 elif v_idx is not None and os.path.isfile(v_idx):
     rule velocity_index_link:
         input: v_idx
@@ -22,6 +20,7 @@ elif v_idx is not None and os.path.isfile(v_idx):
             out = "logs/velocity_index.out",
             err = "logs/velocity_index.err"
         conda: CONDA_SHARED_ENV
+        threads: 1
         shell: "ln -s {input} {output} > {log.out} 2> {log.err}"
 
 ### Velocity mapping (to combined cDNA-intron index)
@@ -36,7 +35,7 @@ rule velocity_map:
         transcripts = "velocity_quant/{sample}/transcripts.txt"
     params:
         outdir = "velocity_quant/{sample}",
-        protocol = "0,6,14:0,0,6:1,0,0" if protocol == 'VASASeq' else protocol
+        protocol = lambda wildcards: "0,6,14:0,0,6:1,0,0" if protocol == 'VASASeq' else protocol
     log:
         out = "logs/velocity_map.{sample}.out",
         err = "logs/velocity_map.{sample}.err"

@@ -1,4 +1,3 @@
-# wget ftp://ftp.ensembl.org/pub/release-95/fasta/mus_musculus/cdna/Mus_musculus.GRCm38.cdna.all.fa.gz
 
 rule create_whitelist:
     input: barcode_tsv
@@ -60,7 +59,7 @@ rule transcript_map:
         transcripts = "transcripts_quant/{sample}/transcripts.txt"
     params:
         outdir = "transcripts_quant/{sample}",
-        protocol = "0,6,14:0,0,6:1,0,0" if protocol == 'VASASeq' else protocol
+        protocol = lambda wildcards: "0,6,14:0,0,6:1,0,0" if protocol == 'VASASeq' else protocol
     log:
         out = "logs/transcript_map.{sample}.out",
         err = "logs/transcript_map.{sample}.err"
