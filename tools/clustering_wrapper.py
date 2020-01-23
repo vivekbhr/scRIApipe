@@ -29,17 +29,31 @@ def get_matrix(countFile, outdir, barcodes, varlist, groups):
     # load adata
     adata = sc.read_mtx(countFile)
 
-    # set indexes and add groups
-    adata.obs.index  = pd.read_csv(barcodes, header=None)[0].values
-    adata.var.index = pd.read_csv(varlist, sep='\t', header=None).astype('category')[2].values
+    # set obs.index and add other obs
+    obs = pd.read_csv(barcodes, header=None)
+    adata.obs.index = obs[0].values
+    obs_new = obs[0].str.split("_", n=2, expand=True)
+    n_col = obs_new.shape[1]
+    adata.obs['sample'] = obs_new.iloc[:, 0:n_col-1].apply(lambda x: '_'.join(x), axis=1).astype('category').values
+    adata.obs['barcode'] = obs_new[2].astype('category').values
+
+    # set index
+    adata.var.index = pd.read_csv(varlist, sep='\t', header=None)[2].astype('category').values
+
+    # add predivined group
+    group_keys = None
     if groups is not None:
-        adata.obs['groups'] = pd.read_csv(groups, sep="\t").values
+        obs_groups = pd.read_csv(groups, sep="\t")
+        obs_groups.set_index(obs_groups.keys()[0], inplace=True)
+        group_keys = obs_groups.keys()
+        obs_groups = obs_groups[group_keys].astype('category') # assumed category based but maybe make this optional for continues scales
+        adata.obs = adata.obs.merge(obs_groups, how='left', left_index=True, right_index=True)
 
-    return(adata)
+    return(adata, group_keys)
 
 # preprocess tcc/gene matrix
 # preprocess tcc/gene matrix
-def preprocess(adata, outdir, mcells=0, mgenes=0, mcounts=0, md=0, ntotal = 1e6, highlyvar = False):
+def preprocess(adata, outdir, mcells, mgenes, mcounts, md, ntotal, highlyvar):
     # open pdf file for plots
     pdf = matplotlib.backends.backend_pdf.PdfPages(outdir+"/preprocessed.pdf")
     plt.figure(figsize=(10,5))
@@ -84,7 +98,7 @@ def preprocess(adata, outdir, mcells=0, mgenes=0, mcounts=0, md=0, ntotal = 1e6,
 
 # cluster cells use louvain clustering
 # cluster cells use louvain clustering
-def clustercells(adata, outdir, groups):
+def clustercells(adata, outdir, group_keys):
     # open pdf file for plots
     pdf = matplotlib.backends.backend_pdf.PdfPages(outdir+"/clustering.pdf")
     plt.figure(figsize=(10,5))
@@ -102,18 +116,22 @@ def clustercells(adata, outdir, groups):
     sc.tl.umap(adata, min_dist=0.1, spread=0.5)
     fig3 = sc.pl.umap(adata, color="louvain", return_fig=True)
 
+    # plot sample on umap
+    fig4 = sc.pl.umap(adata, color='sample', return_fig=True)
+
     # plot also on groups if indicated
-    if groups is not None:
-        fig4 = sc.pl.pca(adata, color="groups", return_fig=True)
-        sc.tl.umap(adata, min_dist=0.1, spread=0.5)
-        fig5 = sc.pl.umap(adata, color="groups", return_fig=True)
+    if group_keys is not None:
+        for key in group_keys:
+            fig4 = sc.pl.pca(adata, color=key, return_fig=True)
+            sc.tl.umap(adata, min_dist=0.1, spread=0.5)
+            fig5 = sc.pl.umap(adata, color=key, return_fig=True)
 
     # save barcode cluster tsv
-    if groups is None:
-        barcode_cluster = adata.obs['louvain']
+    if group_keys is None:
+        barcode_cluster = adata.obs.loc[:,'louvain']
     else:
-        barcode_cluster = adata.obs['louvain', 'groups']
-    barcode_cluster.to_csv(outdir+"/barcode_cluster.tsv", sep="\t", header=False)
+        barcode_cluster = adata.obs.loc[:,['louvain'] + group_keys.to_list()]
+    barcode_cluster.to_csv(outdir+"/barcode_cluster.tsv", sep="\t")
 
     # store adata object
     adata.to_df().to_csv(outdir+"/cluster.tsv", sep='\t', header=True)
@@ -122,12 +140,13 @@ def clustercells(adata, outdir, groups):
     pdf.savefig(fig1)
     pdf.savefig(fig2)
     pdf.savefig(fig3)
-    if groups is not None:
+    if group_keys is not None:
         pdf.savefig(fig4)
         pdf.savefig(fig5)
     pdf.close()
 
     return(adata)
+
 
 # parse arguments from commandline
 def parse_args(defaults=None):
@@ -171,17 +190,51 @@ def parse_args(defaults=None):
                           type=str)
 
     parser.add_argument("-g", "--groups",
-                          dest="groups",
+                          dest="col_groups",
                           required=False,
                           help="file indicating cell types matching tcc.mtx",
                           default=None)
 
-    parser.add_argument("-dt", "--datatype",
-                          dest="datatype",
-                          required=True,
-                          help="indicate tcc/gene",
-                          default=None,
-                          type=str)
+    parser.add_argument("--cells",
+                         dest="cells",
+                         required=False,
+                         help="minimum number cells containing gene/TCC - used in filtering",
+                         default=5,
+                         type=int)
+
+    parser.add_argument("--count",
+                         dest="count",
+                         required=False,
+                         help="minimum number of counts per cell - used in filtering",
+                         default=20,
+                         type=int)
+
+    parser.add_argument("--genes",
+                         dest="genes",
+                         required=False,
+                         help="minimum number of genes/TCCs per cell - used in filtering",
+                         default=100,
+                         type=int)
+
+    parser.add_argument("--dispersity",
+                         dest="dispersity",
+                         required=False,
+                         help="minimum amount of dispersity - used in filtering",
+                         default=0.5,
+                         type=float)
+
+    parser.add_argument("--normalize",
+                        dest="normalize",
+                        required=False,
+                        help="normalize cell reads to indicated amount",
+                        default=1e6,
+                        type=float)
+
+    parser.add_argument("-hv", "--highly-variable",
+                         dest="highlyvar",
+                         required=False,
+                         help="to turn on filtering for highly variable genes/TCCs",
+                         default=False)
 
     return parser
 
@@ -196,17 +249,14 @@ def main():
 
     # get matrix
     print("get matrix")
-    adata = get_matrix(args.sample, outdir, args.barcodes, args.varlist, args.groups)
+    adata, group_keys = get_matrix(args.sample, outdir, args.barcodes, args.varlist, args.col_groups)
 
-    if args.datatype == "tcc":
-        print("start analyses for: {}\n".format(args.datatype))
-        adata = preprocess(adata, outdir, mcells=5, mgenes=100, mcounts=200, md=0.5, ntotal = 1e6)
-        barcode_cluster = clustercells(adata, outdir, args.groups)
-
-    if args.datatype == "gene":
-        print("start analyses for: {}\n".format(args.datatype))
-        adata = preprocess(adata, outdir, mcells=5, mgenes=5, mcounts=20, md=0.5, ntotal = 1e6)
-        barcode_cluster = clustercells(adata, outdir, args.groups)
+    print("start preprocessing")
+    adata = preprocess(adata, outdir, args.cells, args.genes,
+                                      args.count, args.dispersity,
+                                      args.normalize, args.highlyvar)
+    print("start clustering")
+    barcode_cluster = clustercells(adata, outdir, group_keys)
 
 if __name__ == "__main__":
     main()

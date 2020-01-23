@@ -21,3 +21,5 @@ cdna_fasta: 'Mus_musculus.GRCm38.cdna.all.fa'
 protocol:
 ## read length (for kallisto index)
 read_length:
+# provide file with cluster_ID(s); color clusters on these group(s)
+col_groups:
