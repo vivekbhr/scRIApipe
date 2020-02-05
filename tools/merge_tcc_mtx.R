@@ -31,14 +31,14 @@ eclist <- lapply(ecMapList, read.delim, header = FALSE,
                  col.names = c("EC", "Gene", "TxSet"), stringsAsFactors = FALSE)
 
 if(mergeBy == "EC") {
-  eclist <- na.omit(Reduce(function(x,y) merge(x, y, by = "EC"), eclist))
+  eclist <- na.omit(plyr::join_all(eclist, by = "EC", match = "first"))
   eclist2 <- eclist[1:3]
   subset_mtxList <- lapply(matrixFileList, function(mtx){
     ec_counts <- readMM(mtx)
     return(ec_counts[, eclist$EC + 1]) }) # added 1 again, as the EC ids are 0-indexed
 
 } else {
-  eclist <- na.omit(Reduce(function(x,y) merge(x, y, by = "TxSet"), eclist))
+  eclist <- na.omit(plyr::join_all(eclist, by = "TxSet", match = "first"))
   eclist1 <- eclist[ , grepl("EC", colnames(eclist))]
   eclist2 <- cbind(eclist[,c("Gene.x", "TxSet")], eclist1)
   ## subset all matrices based on the merged EClist and merge them
