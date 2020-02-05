@@ -34,9 +34,9 @@ AnnotationDbi::saveDb(gtf.txdb, file.path(outdir, "gtf.txdb"))
 
 ## write cDNA fasta
 message("Writing cDNA fasta")
-txExons <- exonsBy(gtf.txdb, by = "tx")
-names(txExons) <- transcripts(gtf.txdb)$tx_name
-txSeqs <- extractTranscriptSeqs(g, txExons)
+txExons <- GenomicFeatures::exonsBy(gtf.txdb, by = "tx")
+names(txExons) <- GenomicFeatures::transcripts(gtf.txdb)$tx_name
+txSeqs <- GenomicFeatures::extractTranscriptSeqs(g, txExons)
 Biostrings::writeXStringSet(txSeqs, filepath = file.path(outdir, "cDNA.fa"))
 
 ## create velocyto files (cDNA_introns.fasta, tr2g)
