@@ -5,18 +5,18 @@ library(Matrix)
 library(ggplot2)
 Args <- commandArgs(trailingOnly = TRUE)
 ## test Args
-Args <- c("transcripts_quant/TCCs_filtered_merged.mtx", 
-          "transcripts_quant/barcodes_merged.txt", 
-          "transcripts_quant/ECs_filtered_merged.txt",
-          "annotations/tr2g.tsv",
-          0.1, "DTU_testing/ES_NPC_logisticReg")
+#Args <- c("transcripts_quant/TCCs_filtered_merged.mtx",
+#          "transcripts_quant/barcodes_merged.txt",
+#          "transcripts_quant/ECs_filtered_merged.txt",
+#          "annotations/tr2g.tsv",
+#          0.1, "DTU_testing/ES_NPC_logisticReg")
 
 ## INPUT ARGS
-tcc.mtx <- readMM(Args[1]) # "ESC_NPC_merged.tcc.mtx"
-bc <- read.table(Args[2], header = FALSE, stringsAsFactors = FALSE)$V1 # "ESC_NPC_merged.bc"
-ecmap <- read.delim(Args[3], header = FALSE, stringsAsFactors = FALSE) # "ESC_NPC_merged.ec"
-tr2g <- read.table(Args[4], header = FALSE, stringsAsFactors = FALSE) # "../annotations/tr2g.tsv" 
-padj_threshold <- Args[5]
+tcc.mtx <- readMM(Args[1])
+bc <- read.table(Args[2], header = FALSE, stringsAsFactors = FALSE)$V1
+ecmap <- read.delim(Args[3], header = FALSE, stringsAsFactors = FALSE)
+tr2g <- read.table(Args[4], header = FALSE, stringsAsFactors = FALSE)
+padj_threshold <- as.numeric(Args[5])
 
 ## OUTPUT ARGS
 outprefix <- Args[6]
@@ -25,21 +25,33 @@ outprefix <- Args[6]
 # rownames = sample_barcodes (unique)
 rownames(tcc.mtx) <- bc
 # colnames = gene name (non-unique)
-colnames(tcc.mtx) <- ecmap$V1
-colSums(tcc.mtx[,"ENSMUSG00000031575.18", drop = FALSE])
+colnames(tcc.mtx) <- ecmap$V2
+#cols <- colnames(tcc.mtx) == "ENSMUSG00000031575.18"
+#colSums(tcc.mtx[,cols])
 
 # keep track of associated txSet
 kept_ecs <- colSums(tcc.mtx) > 10
 tcc.mtx <- tcc.mtx[rowSums(tcc.mtx) > 50, kept_ecs]
-#tcc.mtx <- tcc.mtx[rowSums(tcc.mtx) > 50, colSums(tcc.mtx) > 10]
+#tcc.mtx <- tcc.mtx[rowSums(tcc.mtx) > 1,colSums(tcc.mtx) > 10]
 ecmap <- ecmap[kept_ecs, ]
 
-tcc.pc <- irlba::irlba(tcc.mtx, nv = 50)
-tcc.pc$u %*% diag(tcc.pc$d) %>% uwot::umap() %>% as.data.frame() -> final.umap
-colnames(final.umap) <- c("UMAP1", "UMAP2")
-final.umap$cell <- as.factor(gsub("(.*)_[AGTC]*", "\\1", rownames(tcc.mtx)))
-final.umap$cell <- as.factor(gsub("(ESC|NPC)_.*", "\\1", rownames(tcc.mtx)))
-ggplot(final.umap, aes(UMAP1, UMAP2, col = cell)) + geom_point()
+
+### pca/umap
+#tcc.mtx2 <- log2((tcc.mtx/colSums(tcc.mtx))*100000 + 0.1)
+#tcc.mtx2 <- tfidf(t(tcc.mtx))
+#tcc.pc <- irlba::irlba(tcc.mtx2, nv = 50)
+#pc <- tcc.pc$u %*% diag(tcc.pc$d) %>% as.data.frame()
+#colnames(pc) <- paste0("PC", 1:ncol(pc))
+#pc <- do_pca(tcc.mtx2) %>% as.data.frame()
+#n <- as.factor(gsub("(.*)_[AGTC]*", "\\1", rownames(tcc.mtx)))
+#pc$cell <- n
+#ggplot(pc, aes(PC1, PC2, col = cell)) + geom_point()
+
+#uwot::umap(pc[1:50], spread = 5, n_neighbors = 15, min_dist = 0.1) %>% as.data.frame() -> final.umap
+#colnames(final.umap) <- c("UMAP1", "UMAP2")
+#final.umap$cell <- n
+#final.umap$cell <- as.factor(gsub("(ESC|NPC)_.*", "\\1", rownames(tcc.mtx)))
+#ggplot(final.umap, aes(UMAP1, UMAP2, col = cell)) + geom_point()
 
 ## logistic-reg + LRT per gene
 lrt_gene <- function(gene, tcc_mtx) {
@@ -66,21 +78,22 @@ if(dim(out)[1] == 0) {
 
 out$padj <- p.adjust(out$pval, method = "BH")
 sigGenes <- as.character(out[out$padj < padj_threshold, ]$genes)
-if(length(sigGenes) == 0 ) warning("No sigificant gene left after FDR correction!!")
+
+message(paste0(length(sigGenes), " significant genes left after FDR correction!!"))
 
 ## plot a given gene
 plot_gene <- function(gene, ec_map) {
   print(gene)
   test <- as.matrix(tcc.mtx[ , grepl(gene, colnames(tcc.mtx)), drop = FALSE])
-  ecmap2 <- ec_map[grepl(gene, ec_map$V1), ] # subset ecmap by gene 
-  n <- paste0("TxSet: ", ecmap2$V2) # use the tx set as col IDs
+  ecmap2 <- ec_map[grepl(gene, ec_map$V2), ] # subset ecmap by gene
+  n <- paste0("TxSet: ", ecmap2$V3) # use the tx set as col IDs
   #colnames(test) <- paste0("EC_", 1:ncol(test))
   colnames(test) <- n
   t <- as.data.frame(test)
   t$labels <- gsub("(.*)_[AGTC]*", "\\1", rownames(t))
   t <- reshape2::melt(t)
-  ggplot(t, aes(labels, value, col = labels)) + geom_jitter(width = 0.1) + 
-    labs(x = "Sample", y = "log10(Counts)", title = gene) + facet_wrap(~variable) + 
+  ggplot(t, aes(labels, value, col = labels)) + geom_jitter(height = 0.01) +
+    labs(x = "Sample", y = "log10(Counts)", title = gene) + facet_wrap(~variable) +
     scale_y_log10()
 }
 
@@ -93,8 +106,8 @@ gn <- unique(tr2g[match(sigGenes, tr2g$V2), "V3"])
 write.table(gn, file = paste0(outprefix, "_sigGenes.txt"), quote = F, row.names = F, col.names = F)
 write.table(sigGenes, file = paste0(outprefix, "_sigGenes_ensID.txt"), quote = F, row.names = F, col.names = F)
 
-## 
-tr <- read.delim("transcripts_quant/ESC_merged/transcripts.txt", header = F)
+##
+#tr <- read.delim("transcripts_quant/ESC_merged/transcripts.txt", header = F)
 ## Second approach :: DEXSeq followed by lancaster p-value aggregation
 #library(DEXSeq)
 #exnames <- colnames(tcc.mtx)
@@ -102,13 +115,13 @@ tr <- read.delim("transcripts_quant/ESC_merged/transcripts.txt", header = F)
 #sapply(unique(exnames), function(x){
 #  erep <- sum(grepl(x, exnames, fixed = TRUE))
 #  erep <- paste0("E", 1:erep)
-#  return(erep) 
+#  return(erep)
 #}) %>% unlist() -> featureID
 
 #cd <- t(tcc.mtx)
 #rownames(cd) <- exnames2
 
-#dds <- DEXSeqDataSet(countData = as.matrix(cd), 
+#dds <- DEXSeqDataSet(countData = as.matrix(cd),
 #              sampleData = data.frame(row.names = rownames(tcc.mtx),
 #                                      condition = gsub("(.*)_[AGTC]*", "\\1", rownames(tcc.mtx))
 #                                      ),
