@@ -36,18 +36,18 @@ from sklearn.decomposition import PCA
 from scipy.spatial.distance import pdist, squareform
 scv.settings.set_figure_params('scvelo')
 
-def get_matrix(sampleName):
-    spliced_dir = "velocity_quant/"+sampleName+"/spliced_counts/"
-    unspliced_dir = "velocity_quant/"+sampleName+"/unspliced_counts/"
+def get_matrix(sampleName, spliced_dir, unspliced_dir, prefix):
+    spliced_dir = "velocity_quant/" + sampleName + "/" + spliced_dir + "/" #spliced_counts
+    unspliced_dir = "velocity_quant/" + sampleName + "/" + unspliced_dir + "/" #unspliced_counts
 
-    s = sc.read_mtx(spliced_dir + "spliced.mtx")
-    u = sc.read_mtx(unspliced_dir + "unspliced.mtx")
+    s = sc.read_mtx(spliced_dir + prefix + ".mtx")
+    u = sc.read_mtx(unspliced_dir + prefix + ".mtx")
 
-    s_bcs = pd.read_csv(spliced_dir + "spliced.barcodes.txt", header=None)
-    u_bcs = pd.read_csv(unspliced_dir + "unspliced.barcodes.txt", header=None)
+    s_bcs = pd.read_csv(spliced_dir + prefix + ".barcodes.txt", header=None)
+    u_bcs = pd.read_csv(unspliced_dir + prefix + ".barcodes.txt", header=None)
 
-    s_genes = pd.read_csv(spliced_dir + "spliced.genes.txt", header=None)
-    u_genes = pd.read_csv(unspliced_dir + "unspliced.genes.txt", header=None)
+    s_genes = pd.read_csv(spliced_dir + prefix + ".genes.txt", header=None)
+    u_genes = pd.read_csv(unspliced_dir + prefix + ".genes.txt", header=None)
 
     s.obs.index = s_bcs[0].values
     u.obs.index = u_bcs[0].values
@@ -177,7 +177,7 @@ def main():
 
     ## prepare matrices
     print("Preparing matrices")
-    quant = [get_matrix(x) for x in args.samples]
+    quant = [get_matrix(x, 'geneCounts_spliced', 'geneCounts_unspliced', 'output') for x in args.samples]
     s = scp.sparse.vstack([sample['s'].X for sample in quant])#pl1['s'].X, pl3['s'].X, pl4['s'].X, pl5['s'].X]
     u = scp.sparse.vstack([sample['u'].X for sample in quant])#pl1['u'].X, pl3['u'].X, pl4['u'].X, pl5['u'].X
     s_bcs = pd.concat([sample['s_bcs'] for sample in quant],ignore_index=False)
