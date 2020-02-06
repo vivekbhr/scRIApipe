@@ -1,18 +1,18 @@
 
-rule get_ec_geneMap:
-    input:
-        tr2g = "annotations/tr2g.tsv",
-        txlist = "transcripts_quant/{sample}/transcripts.txt",
-        ecToTx = "transcripts_quant/{sample}/eq_counts/output.ec.txt"
-    output:
-        temp("transcripts_quant/{sample}/eq_counts/ec-to-gene.txt")
-    params:
-        rscript = os.path.join(workflow.basedir, "tools", "get_ec_geneMap.R")
-    log: "logs/get_ec_geneMap.{sample}.out"
-    threads: 1
-    conda: CONDA_SHARED_ENV
-    shell:
-        "Rscript {params.rscript} {input.tr2g} {input.txlist} {input.ecToTx} {output} 2> {log} 2>&1"
+#rule get_ec_geneMap:
+#    input:
+#        tr2g = "annotations/tr2g.tsv",
+#        txlist = "transcripts_quant/{sample}/transcripts.txt",
+#        ecToTx = "transcripts_quant/{sample}/eq_counts/output.ec.txt"
+#    output:
+#        temp("transcripts_quant/{sample}/eq_counts/ec-to-gene.txt")
+#    params:
+#        rscript = os.path.join(workflow.basedir, "tools", "get_ec_geneMap.R")
+#    log: "logs/get_ec_geneMap.{sample}.out"
+#    threads: 1
+#    conda: CONDA_SHARED_ENV
+#    shell:
+#        "Rscript {params.rscript} {input.tr2g} {input.txlist} {input.ecToTx} {output} 2> {log} 2>&1"
 
 ## Use awk to subset the EC matrix and get the transcripts
 # awk -v FS="\t" 'NR==FNR{rows[$1]++;next} ($1 in rows)' \
@@ -24,7 +24,7 @@ rule get_ec_geneMap:
 
 rule merge_ECmap:
     input:
-        ecToTx = "transcripts_quant/{sample}/eq_counts/output.ec.txt",
+        ecToTx = "transcripts_quant/{sample}/matrix.ec",
         ecToGene = "transcripts_quant/{sample}/eq_counts/ec-to-gene.txt"
     output:
         "transcripts_quant/{sample}/eq_counts/ECtoGene_map.txt"
@@ -46,8 +46,9 @@ rule merge_ECmap:
 
 rule merge_TCCs:
     input:
-        ecToGeneList = expand("transcripts_quant/{sample}/eq_counts/ECtoGene_map.txt", sample = samples),
         mtxList = expand("transcripts_quant/{sample}/eq_counts/output.mtx", sample = samples),
+        ecToGeneList = expand("transcripts_quant/{sample}/eq_counts/ECtoGene_map.txt", sample = samples),
+        ecList = expand("transcripts_quant/{sample}/eq_counts/output.ec.txt", sample = samples),
         bcList = expand("transcripts_quant/{sample}/eq_counts/output.barcodes.txt", sample = samples)
     output:
         mtx = "transcripts_quant/TCCs_filtered_merged.mtx",
@@ -58,11 +59,12 @@ rule merge_TCCs:
         ecToGeneList = ",".join(expand("transcripts_quant/{sample}/eq_counts/ECtoGene_map.txt", sample = samples)),
         mtxList = ",".join(expand("transcripts_quant/{sample}/eq_counts/output.mtx", sample = samples)),
         bcList = ",".join(expand("transcripts_quant/{sample}/eq_counts/output.barcodes.txt", sample = samples)),
+        ecList = ",".join(expand("transcripts_quant/{sample}/eq_counts/output.ec.txt", sample = samples)),
         samples = ",".join(expand("{sample}", sample = samples)),
         mergeBy = "TxSet"
     log: "logs/merge_TCCs.out"
     threads: 1
     conda: CONDA_SHARED_ENV
     shell:
-        "Rscript {params.rscript} {params.mtxList} {params.ecToGeneList} {params.bcList} {params.samples} {params.mergeBy} \
+        "Rscript {params.rscript} {params.mtxList} {params.ecToGeneList} {params.ecList} {params.bcList} {params.samples} {params.mergeBy} \
          {output.mtx} {output.ECmap} {output.bc} 2> {log} 2>&1"
