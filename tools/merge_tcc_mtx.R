@@ -45,7 +45,7 @@ mtxlist <- lapply(seq_along(matrixFileList), function(n){
   
 ## then subset for ECs that match across samples (dropping ECs specific to only one sample)
 if(mergeBy == "EC") {
-  eclist.match <- na.omit(plyr::join_all(eclist, by = "EC", type = "inner", match = "first"))
+  eclist.match <- na.omit(plyr::join_all(eclist, by = "EC", type = "inner"))
   eclist2 <- eclist.match[1:3]
   subset_mtxList <- lapply(seq_along(mtxlist), function(n){
     mt <- mtxlist[[n]]
@@ -53,7 +53,7 @@ if(mergeBy == "EC") {
     return(mt[, keptEC]) })
 
 } else {
-  eclist.match <- na.omit(plyr::join_all(eclist, by = "TxSet", type = "inner", match = "first"))
+  eclist.match <- na.omit(plyr::join_all(eclist, by = "TxSet", type = "inner"))
   eclist1 <- eclist.match[ , grepl("EC", colnames(eclist.match))]
   eclist2 <- cbind(eclist.match[,c("Gene", "TxSet")], eclist1)
   ## subset all matrices based on the merged EClist and merge them (keeps more ECs than the one above)

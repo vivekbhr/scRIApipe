@@ -56,7 +56,7 @@ rule merge_TCCs:
         bc = "transcripts_quant/barcodes_merged.txt"
     params:
         rscript = os.path.join(workflow.basedir, "tools", "merge_tcc_mtx.R"),
-        ecToGeneList = ",".join(expand("transcripts_quant/{sample}/eq_counts/ECtoGene_map.txt", sample = samples)),
+        ecToGeneList = ",".join(expand("transcripts_quant/{sample}/eq_counts/ec-to-gene.txt", sample = samples)),
         mtxList = ",".join(expand("transcripts_quant/{sample}/eq_counts/output.mtx", sample = samples)),
         bcList = ",".join(expand("transcripts_quant/{sample}/eq_counts/output.barcodes.txt", sample = samples)),
         ecList = ",".join(expand("transcripts_quant/{sample}/eq_counts/output.ec.txt", sample = samples)),
