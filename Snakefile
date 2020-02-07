@@ -92,7 +92,7 @@ rule all:
         "annotations/cDNA_tx_to_capture.txt",
         "annotations/tr2g.tsv",
         #"annotations/gtf.txdb",
-        "annotations/cDNA.all.idx",
+        "annotations/cDNA.idx",
         expand("transcripts_quant/{sample}/output.correct.sort.bus", sample = samples),
         expand("transcripts_quant/{sample}/eq_counts/output.mtx", sample = samples),
         expand("transcripts_quant/{sample}/gene_counts/output.mtx", sample = samples),

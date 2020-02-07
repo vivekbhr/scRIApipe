@@ -29,7 +29,7 @@ rule prep_annotation:
 
 rule transcript_index:
     input: "annotations/cDNA.fa"
-    output: "annotations/cDNA.all.idx"
+    output: "annotations/cDNA.idx"
     log:
         out = "logs/transcript_index.out",
         err = "logs/transcript_index.err"
