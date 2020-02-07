@@ -41,7 +41,7 @@ rule transcript_map:
     input:
         R1 = "FASTQ_trimmed/{sample}"+reads[0]+".fastq.gz" if trim else "FASTQ/{sample}"+reads[0]+".fastq.gz",
         R2 = "FASTQ_trimmed/{sample}"+reads[1]+".fastq.gz" if trim else "FASTQ/{sample}"+reads[1]+".fastq.gz",
-        idx = "annotations/cDNA.all.idx"
+        idx = "annotations/cDNA.idx"
     output:
         bus = "transcripts_quant/{sample}/output.bus",
         matrix = "transcripts_quant/{sample}/matrix.ec",

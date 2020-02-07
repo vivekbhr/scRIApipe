@@ -5,7 +5,6 @@ options("scipen"=100, "digits"=4)
 ### get TCCs using bustools text output + create a EC to gene map
 
 library(magrittr)
-setwd("/hpc/hub_oudenaarden/vbhardwaj/2019_vasa_seq/mESC_NPC/04b_scria_fullRun/")
 # test args
 #Args = c("annotations/tr2g.tsv",
 #         "transcripts_quant/ESC_merged/output.txt",
@@ -107,11 +106,11 @@ write.table(statsdf, file = file.path(outFolder, "stats.txt"),
 #      li <- ifelse(length(unique(li)) > 1, NA, li)
 #      return(li)
 #    }) -> gene_ids
-    
+
 #    which(!is.na(gene_ids)) -> kept_ec
 #    gene_ids[!is.na(gene_ids)] -> kept_genes
 #    cat(paste(as.numeric(names(kept_ec)), gene_ids[kept_ec], sep = "\t"), sep = "\n", append = TRUE, file = outFile)
-#  } 
+#  }
 #}
 
 #con <- file(ec_to_tr)
