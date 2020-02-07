@@ -99,7 +99,7 @@ rule txt_unspliced:
         "velocity_quant/{sample}/unspliced.bus"
     output:
         "velocity_quant/{sample}/unspliced.txt"
-    log: "logs/txt_spliced.{sample}.out"
+    log: "logs/txt_unspliced.{sample}.out"
     threads: 1
     conda: CONDA_SHARED_ENV
     shell: "bustools text -o {output} {input} > {log}"
@@ -108,7 +108,7 @@ rule tcc_spliced:
     input:
         tr2g = "annotations/tr2g.tsv",
         ecToTr = "velocity_quant/{sample}/matrix.ec",
-        transcripts = "annotations/cDNA_tx_to_capture.txt",
+        transcripts = "velocity_quant/{sample}/transcripts.txt",
         busfile = "velocity_quant/{sample}/spliced.txt"
     output:
          mtx = "velocity_quant/{sample}/TCC_spliced/output.mtx",
@@ -123,12 +123,13 @@ rule tcc_spliced:
     conda: CONDA_SHARED_ENV
     shell:
         "Rscript {params.rscript} {input.tr2g} {input.busfile} {input.transcripts} {input.ecToTr} {params.out} 2> {log} 2>&1"
+        #nf=$(gawk -F "," '{{ print NF }}' {input.ecToTr} | sort -nr | head -1)
 
 rule tcc_unspliced:
     input:
         tr2g = "annotations/tr2g.tsv",
         ecToTr = "velocity_quant/{sample}/matrix.ec",
-        transcripts = "annotations/introns_tx_to_capture.txt",
+        transcripts = "velocity_quant/{sample}/transcripts.txt",
         busfile = "velocity_quant/{sample}/unspliced.txt"
     output:
          mtx = "velocity_quant/{sample}/TCC_unspliced/output.mtx",
@@ -143,6 +144,7 @@ rule tcc_unspliced:
     conda: CONDA_SHARED_ENV
     shell:
         "Rscript {params.rscript} {input.tr2g} {input.busfile} {input.transcripts} {input.ecToTr} {params.out} 2> {log} 2>&1"
+        #nf=$(gawk -F "," '{{ print NF }}' {input.ecToTr} | sort -nr | head -1)
 
 rule geneCounts_spliced:
     input:
@@ -155,7 +157,7 @@ rule geneCounts_spliced:
          bc = "velocity_quant/{sample}/geneCounts_spliced/output.barcodes.txt",
          genes = "velocity_quant/{sample}/geneCounts_spliced/output.genes.txt"
     params:
-        out = "transcripts_quant/{sample}/geneCounts_spliced/",
+        out = "velocity_quant/{sample}/geneCounts_spliced/",
         rscript = os.path.join(workflow.basedir, "tools", "get_geneCounts.R")
     log: "logs/get_geneCounts.{sample}.out"
     threads: 1
@@ -174,7 +176,7 @@ rule geneCounts_unspliced:
          bc = "velocity_quant/{sample}/geneCounts_unspliced/output.barcodes.txt",
          genes = "velocity_quant/{sample}/geneCounts_unspliced/output.genes.txt"
     params:
-        out = "transcripts_quant/{sample}/geneCounts_unspliced/",
+        out = "velocity_quant/{sample}/geneCounts_unspliced/",
         rscript = os.path.join(workflow.basedir, "tools", "get_geneCounts.R")
     log: "logs/get_geneCounts.{sample}.out"
     threads: 1
@@ -182,10 +184,34 @@ rule geneCounts_unspliced:
     shell:  #"{params.bustools} count --genecounts -o {params.out} -g {input.t2g} -e {input.mtx} -t {input.transcripts} {input.busfile} > {log} 2>&1"
         "Rscript {params.rscript} {input.ecToGene} {input.mtx} {input.ec} {input.bc} {params.out} > {log} 2>&1"
 
+rule intersect_geneCounts:
+    input:
+        splicedMtx = "velocity_quant/{sample}/geneCounts_spliced/output.mtx",
+        unsplicedMtx = "velocity_quant/{sample}/geneCounts_unspliced/output.mtx",
+        splicedGenes = "velocity_quant/{sample}/geneCounts_spliced/output.genes.txt",
+        unsplicedGenes = "velocity_quant/{sample}/geneCounts_unspliced/output.genes.txt"
+    output:
+        splicedMtx = "velocity_quant/{sample}/geneCounts_spliced/output_isect.mtx",
+        unsplicedMtx = "velocity_quant/{sample}/geneCounts_unspliced/output_isect.mtx",
+        splicedGenes = "velocity_quant/{sample}/geneCounts_spliced/output.genes_isect.txt",
+        unsplicedGenes = "velocity_quant/{sample}/geneCounts_unspliced/output.genes_isect.txt"
+    params:
+        splicedOut = "velocity_quant/{sample}/geneCounts_spliced/",
+        unsplicedOut = "velocity_quant/{sample}/geneCounts_unspliced/",
+        rscript = os.path.join(workflow.basedir, "tools", "intersect_geneCounts.R")
+    log: "logs/intersect_geneCounts.{sample}.out"
+    threads: 1
+    conda: CONDA_SHARED_ENV
+    shell:
+        "Rscript {params.rscript} {input.splicedMtx} {input.unsplicedMtx} {input.splicedGenes} "
+        "{input.unsplicedGenes} {params.splicedOut} {params.unsplicedOut} > {log} 2>&1"
+
+
+
 rule velocyto:
     input:
-        unspliced = expand("velocity_quant/{sample}/geneCounts_unspliced/output.mtx", sample = samples),
-        spliced = expand("velocity_quant/{sample}/geneCounts_spliced/output.mtx", sample = samples),
+        unspliced = expand("velocity_quant/{sample}/geneCounts_unspliced/output_isect.mtx", sample = samples),
+        spliced = expand("velocity_quant/{sample}/geneCounts_spliced/output_isect.mtx", sample = samples),
         t2g = "annotations/tr2g.tsv"
     output:
         adata_all = "velocity_output/anndata.loom",
