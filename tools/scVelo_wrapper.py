@@ -140,7 +140,7 @@ def parse_args(defaults=None):
                          metavar="INT",
                          help="minimum number of cells required to keep the gene (default: '%(default)s')",
                          type=int,
-                         default=3)
+                         default=10)
 
     parser.add_argument("-sb", "--samplesAsBatches",
                          dest="samples_as_batches",
