@@ -30,7 +30,7 @@ bclist <- lapply(seq_along(bclist), function(n) paste(samples[n], bclist[[n]]$V1
 
 ## merge the EC map list based on the contained transcripts or ECs (depending on "mergeBy")
 eclist <- lapply(ecList.filtered, read.delim, header = FALSE,
-                 col.names = c("EC", "Gene", "TxSet"), stringsAsFactors = FALSE)
+                 col.names = c("EC", "TxSet", "Gene"), stringsAsFactors = FALSE)
 
 ## first subset the mtx for each sample based on it's own filtered ECs
 mtxlist <- lapply(seq_along(matrixFileList), function(n){

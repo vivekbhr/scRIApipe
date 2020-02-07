@@ -22,32 +22,32 @@
 # paste output_ESC.txt tcc_subset.txt | \
 # awk 'OFS="\t" {if($3 == $1) {print $1,$2,$4 > "ESC_EC_subset_merged.txt"} else {print $0 > "ESC_EC_subset_unmerged.txt"}}'
 
-rule merge_ECmap:
-    input:
-        ecToTx = "transcripts_quant/{sample}/matrix.ec",
-        ecToGene = "transcripts_quant/{sample}/eq_counts/ec-to-gene.txt"
-    output:
-        "transcripts_quant/{sample}/eq_counts/ECtoGene_map.txt"
-    params:
-        tmpfile = 'transcripts_quant/{sample}/ec_subset.tmp',
-        mismatchFile = 'transcripts_quant/{sample}/ec_mismatch.txt'
-    log: "logs/merge_ECmap.{sample}.out"
-    threads: 1
-    conda: CONDA_SHARED_ENV
-    shell:
-        """
-        awk -v FS="\\t" 'NR==FNR {{ rows[$1]++;next }} ($1 in rows)' \
-        {input.ecToGene} {input.ecToTx} > {params.tmpfile} &&
+#rule merge_ECmap:
+#    input:
+#        ecToTx = "transcripts_quant/{sample}/matrix.ec",
+#        ecToGene = "transcripts_quant/{sample}/eq_counts/ec-to-gene.txt"
+#    output:
+#        "transcripts_quant/{sample}/eq_counts/ECtoGene_map.txt"
+#    params:
+#        tmpfile = 'transcripts_quant/{sample}/ec_subset.tmp',
+#        mismatchFile = 'transcripts_quant/{sample}/ec_mismatch.txt'
+#    log: "logs/merge_ECmap.{sample}.out"
+#    threads: 1
+#    conda: CONDA_SHARED_ENV
+#    shell:
+#        """
+#        awk -v FS="\\t" 'NR==FNR {{ rows[$1]++;next }} ($1 in rows)' \
+#        {input.ecToGene} {input.ecToTx} > {params.tmpfile} &&
         ##
-        paste {input.ecToGene} {params.tmpfile} | \
-        awk 'OFS="\\t" {{ if($3 == $1) {{ print $1,$2,$4 > "{output}" }} else {{ print $0 > "{params.mismatchFile}" }} }}' \
-        2> {log} 2>&1
-        """
+#        paste {input.ecToGene} {params.tmpfile} | \
+#        awk 'OFS="\\t" {{ if($3 == $1) {{ print $1,$2,$4 > "{output}" }} else {{ print $0 > "{params.mismatchFile}" }} }}' \
+#        2> {log} 2>&1
+#        """
 
 rule merge_TCCs:
     input:
         mtxList = expand("transcripts_quant/{sample}/eq_counts/output.mtx", sample = samples),
-        ecToGeneList = expand("transcripts_quant/{sample}/eq_counts/ECtoGene_map.txt", sample = samples),
+        ecToGeneList = expand("transcripts_quant/{sample}/eq_counts/ec-to-gene.txt", sample = samples),
         ecList = expand("transcripts_quant/{sample}/eq_counts/output.ec.txt", sample = samples),
         bcList = expand("transcripts_quant/{sample}/eq_counts/output.barcodes.txt", sample = samples)
     output:
