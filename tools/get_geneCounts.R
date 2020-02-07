@@ -18,8 +18,8 @@ bclist <- Args[4]
 outFolder <- Args[5]
 
 ## load TCC output files
-ec_genemap <- readr::read_tsv(ec_to_gene, col_names = c("ec", "gene"),
-                              col_types = "ic")
+ec_genemap <- readr::read_tsv(ec_to_gene, col_names = c("ec","tx", "gene"),
+                              col_types = "icc")
 bus_umi.mat <- Matrix::readMM(mtx)
 barcodes <- readr::read_tsv(bclist, col_names = "bc", col_types = "c")$bc
 

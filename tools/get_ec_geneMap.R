@@ -5,7 +5,7 @@ options("scipen"=100, "digits"=4)
 ### get TCCs using bustools text output + create a EC to gene map
 
 library(magrittr)
-
+setwd("/hpc/hub_oudenaarden/vbhardwaj/2019_vasa_seq/mESC_NPC/04b_scria_fullRun/")
 # test args
 #Args = c("annotations/tr2g.tsv",
 #         "transcripts_quant/ESC_merged/output.txt",
@@ -18,7 +18,7 @@ busfile <- Args[2]
 transcript_list <- Args[3]
 ec_to_tr <- Args[4]
 outFolder <- Args[5]
-
+#nf <- as.numeric(Args[6]) # max number of fields in .ec file
 
 ## convert ec to tx map to ec to gene map
 tr2g <- read.delim(tr2g, header = FALSE, stringsAsFactors = FALSE)
@@ -49,6 +49,7 @@ statsdf <- data.frame(quantile = c("Min", "1st_qt", "Median", "Mean", "3rd_qt", 
                    nReads = as.integer(summary(umi_perbc$reads)),
                    nDedup_Reads = as.integer(summary(umi_perbc$unique_reads))
                    )
+
 ## unique reads are much more than nUMI..!!
 ## simple deupd per eq class
 split(bus, bus$bc) %>%
@@ -76,49 +77,76 @@ write.table(statsdf, file = file.path(outFolder, "stats.txt"),
 
 
 # convert eclist to char , to match with txid file
-bus_eclist %<>% as.character()
+#bus_eclist %<>% as.character()
 
 ## read an EC matrix and map EC to genes
-cf <- count.fields(file(ec_to_tr), sep = ",")
-no_col <- max(cf) + 1
+# if nf is given, skip the calculation (memory saving)
+#if(is.na(nf)) {
+#} else {
+#  no_col <- nf + 1
+#}
 
 ## map EC to genes,
 ## 1. remove ECs that don't map to genes (sanity check)
 ## 2. also remove ECs that map to multiple genes
 ## 3. also remove ECs that are not there in the bus text file
 
-get_ec_gene_df <- function(line, outFile) {
-  ecs <- read.table(text = gsub(",", "\t", line), fill = TRUE, header = F,
-                    col.names = paste("Col", 1:no_col, sep = "_"), sep = "\t", row.names = 1)
+#get_ec_gene_df <- function(line, outFile) {
+#  ecs <- read.table(text = gsub(",", "\t", line), fill = TRUE, header = F,
+                    #col.names = paste("Col", 1:no_col, sep = "_"),
+#                    sep = "\t", row.names = 1)
   ## pre-filter ecs which are not in the ecList from the bus file
-  ecs <- ecs[rownames(ecs) %in% bus_eclist, ]
+#  ecs <- ecs[rownames(ecs) %in% bus_eclist, , drop = FALSE]
+#  if(length(ecs) > 0) {
+    # for each row in tx IDs
+#    apply(ecs, 1, function(x) {
+#      y <- as.numeric(na.omit(x)) + 1
+      # get corresponding geneID
+#      li <- na.omit(tx_ids[y, ]$gene_id)
+      # report NA if multiple genes are found
+#      li <- ifelse(length(unique(li)) > 1, NA, li)
+#      return(li)
+#    }) -> gene_ids
+    
+#    which(!is.na(gene_ids)) -> kept_ec
+#    gene_ids[!is.na(gene_ids)] -> kept_genes
+#    cat(paste(as.numeric(names(kept_ec)), gene_ids[kept_ec], sep = "\t"), sep = "\n", append = TRUE, file = outFile)
+#  } 
+#}
 
-  # for each row in tx IDs
-  apply(ecs, 1, function(x) {
-    y <- as.numeric(na.omit(x)) + 1
-    # get corresponding geneID
-    li <- na.omit(tx_ids[y, ]$gene_id)
-    # report NA if multiple genes are found
-    li <- ifelse(length(unique(li)) > 1, NA, li)
-    return(li)
-  }) -> gene_ids
+#con <- file(ec_to_tr)
 
-  which(!is.na(gene_ids)) -> kept_ec
-  gene_ids[!is.na(gene_ids)] -> kept_genes
-  cat(paste(as.numeric(names(kept_ec)), gene_ids[kept_ec], sep = "\t"), sep = "\n", append = TRUE, file = outFile)
-}
+#line <- c()
+#while(TRUE) {
+#  line = readLines(con, 50000)
+#  if(length(line) == 0) break
+#  else {
+#    cf <- count.fields(file(ec_to_tr), sep = ",")
+#    no_col <- max(cf) + 1
+#    get_ec_gene_df(line, out)
+#  }
+#}
 
-con <- file(ec_to_tr, "r")
-out <- file(file.path(outFolder, "ec-to-gene.txt"), open = "w")
+#df <- readr::read_tsv(ec_to_tr, col_names = c("ec", "tx"), col_types = "ic")
 
-lines <- c()
-while(TRUE) {
-  line = readLines(con, 50000)
-  if(length(line) == 0) break
-  else {
-    get_ec_gene_df(line, out)
+getGenes <- function(x, pos, eclist = bus_eclist, file = out) {
+  df <- dplyr::filter(x, ec %in% eclist)
+  if(dim(df)[1] != 0) {
+    apply(df, 1, function(x) {
+      key <- as.integer(x[1])
+      values <- unlist(strsplit(x[2], ","))
+      genes <- unique(tx_ids[values, ]$gene_id)
+      name <- ifelse(length(genes) != 1, NA, genes)
+      return(name)
+    }) -> df$gene
+    readr::write_tsv(df, file, append = TRUE)
+    return(TRUE)
+  } else {
+    return(FALSE)
   }
 }
 
+out <- file(file.path(outFolder, "ec-to-gene.txt"), open = "w")
+readr::read_tsv_chunked(ec_to_tr, callback = readr::DataFrameCallback$new(getGenes), chunk_size = 50000,
+                        col_names = c("ec", "tx"), col_types = "ic", trim_ws = TRUE, skip_empty_rows = TRUE)
 close(out)
-close(con)
