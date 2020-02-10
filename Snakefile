@@ -66,33 +66,35 @@ def runTrimming(trim):
 def runVelocity():
     if velocity:
         file_list = [
-    "annotations/cDNA_introns.fa",
-    "annotations/cDNA_introns.idx",
-    expand("velocity_quant/{sample}/output.correct.sort.bus", sample = samples),
-    expand("velocity_quant/{sample}/spliced.bus", sample = samples),
-    expand("velocity_quant/{sample}/unspliced.bus", sample = samples),
-    expand("velocity_quant/{sample}/spliced_counts/spliced.mtx", sample = samples),
-    expand("velocity_quant/{sample}/unspliced_counts/unspliced.mtx", sample = samples),
-    "velocity_output/anndata.loom",
-    "velocity_output/anndata_filtered.loom",
-    "velocity_output/qc-metrics.csv",
-    "velocity_output/velocity-grid_louvain.png"
-    ]
+        "annotations/cDNA_introns.fa",
+        "annotations/cDNA_introns.idx",
+        expand("velocity_quant/{sample}/output.correct.sort.bus", sample = samples),
+        expand("velocity_quant/{sample}/spliced.bus", sample = samples),
+        expand("velocity_quant/{sample}/unspliced.bus", sample = samples),
+        expand("velocity_quant/{sample}/spliced_counts/spliced.mtx", sample = samples),
+        expand("velocity_quant/{sample}/unspliced_counts/unspliced.mtx", sample = samples),
+        "velocity_output/anndata.loom",
+        "velocity_output/anndata_filtered.loom",
+        "velocity_output/qc-metrics.csv",
+        "velocity_output/velocity-grid_louvain.png"
+        ]
         return(file_list)
     else:
         return([])
 
-### main rule ##################################################################
-################################################################################
-localrules: FASTQ1, FASTQ2
-rule all:
-    input:
-        runTrimming(trim),
-        expand("FASTQ/FastQC/{sample}{read}_fastqc.html", sample = samples, read=reads),
-        "annotations/cDNA_tx_to_capture.txt",
-        "annotations/tr2g.tsv",
-        "annotations/gtf.txdb",
-        "annotations/cDNA.all.idx",
+def getIdx(idxOnly, velocity):
+    file_list = [
+    expand("FASTQ/FastQC/{sample}{read}_fastqc.html", sample = samples, read=reads),
+    "annotations/cDNA_tx_to_capture.txt",
+    "annotations/tr2g.tsv",
+    "annotations/gtf.txdb",
+    "annotations/cDNA.all.idx",
+    "annotations/cDNA_introns.fa"
+    ]
+    if velocity:
+        file_list += "annotations/cDNA_introns.idx"
+    if not idxOnly:
+        file_list += [
         expand("transcripts_quant/{sample}/output.correct.sort.bus", sample = samples),
         expand("transcripts_quant/{sample}/eq_counts/output.mtx", sample = samples),
         expand("transcripts_quant/{sample}/gene_counts/output.mtx", sample = samples),
@@ -102,7 +104,16 @@ rule all:
         "clustering_tcc/cluster.tsv",
         "clustering_tcc/barcode_cluster.tsv",
         "clustering_tcc/preprocessed.pdf",
-        "clustering_tcc/clustering.pdf",
+        "clustering_tcc/clustering.pdf"
+        ]
+    return(file_list)
+### main rule ##################################################################
+################################################################################
+localrules: FASTQ1, FASTQ2
+rule all:
+    input:
+        runTrimming(trim),
+        getIdx(idxOnly, velocity),
         runVelocity()
 
 ### execute after workflow finished ############################################

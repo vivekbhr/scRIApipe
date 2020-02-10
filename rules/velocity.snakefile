@@ -1,27 +1,15 @@
 ### velocit indexing (prepare files)
-
-if v_idx is None:
-    rule velocity_index:
-        input:
-            "annotations/cDNA_introns.fa"
-        output:
-            "annotations/cDNA_introns.idx"
-        log:
-            out = "logs/velocity_index.out",
-            err = "logs/velocity_index.err"
-        threads: 1
-        conda: CONDA_SHARED_ENV
-        shell: "kallisto index -i {output} -k 31 {input} > {log.out} 2> {log.err}"
-elif v_idx is not None and os.path.isfile(v_idx):
-    rule velocity_index_link:
-        input: v_idx
-        output: "annotations/cDNA_introns.idx"
-        log:
-            out = "logs/velocity_index.out",
-            err = "logs/velocity_index.err"
-        conda: CONDA_SHARED_ENV
-        threads: 1
-        shell: "ln -s {input} {output} > {log.out} 2> {log.err}"
+rule velocity_index:
+    input:
+        "annotations/cDNA_introns.fa"
+    output:
+        "annotations/cDNA_introns.idx"
+    log:
+        out = "logs/velocity_index.out",
+        err = "logs/velocity_index.err"
+    threads: 1
+    conda: CONDA_SHARED_ENV
+    shell: "kallisto index -i {output} -k 31 {input} > {log.out} 2> {log.err}"
 
 ### Velocity mapping (to combined cDNA-intron index)
 rule velocity_map:
