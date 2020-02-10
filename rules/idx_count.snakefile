@@ -24,7 +24,7 @@ rule prep_annotation:
         out = "logs/prep_annotation.out",
         err = "logs/prep_annotation.err"
     threads: 2
-    conda: CONDA_SHARED_ENV
+    conda: CONDA_BUS_ENV
     shell: "{params.script} {params.genome} {input} {params.readLength} {params.outdir} > {log.out} 2> {log.err}"
 
 rule transcript_index:
