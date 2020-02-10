@@ -254,13 +254,13 @@ def main():
 
     ## then, velocyto filter
     print("Velocity filtering")
-    scv.pp.filter_and_normalize(adata, min_shared_counts=5, n_top_genes=5000)
+    scv.pp.filter_and_normalize(adata, min_shared_counts=20, n_top_genes=5000)
     print("Cells left: {}".format(len(adata.obs.index)))
     print("Genes left: {}".format(len(adata.var_names)))
     ## plot
-    sc.pp.neighbors(adata, use_rep='X')
+    sc.pp.neighbors(adata, n_pcs=30)
     sc.tl.louvain(adata)
-    sc.tl.umap(adata)
+    sc.tl.umap(adata, min_dist=0.1, spread=4)
     fig = sc.pl.umap(adata, color=['louvain', 'sample'], return_fig=True)
     fig.savefig(outdir+"/allsamples_UMAP.png")
 
