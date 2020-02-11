@@ -250,11 +250,11 @@ def main():
     # correct for passing 'None' by
     if args.col_groups == 'None':
         args.col_groups = None
-    
+
     # get matrix
     print("get matrix")
     adata, group_keys = get_matrix(args.sample, outdir, args.barcodes, args.varlist, args.col_groups)
-
+    
     print("start preprocessing")
     adata = preprocess(adata, outdir, args.cells, args.genes,
                                       args.count, args.dispersity,

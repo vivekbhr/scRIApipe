@@ -102,7 +102,10 @@ def getIdx(idxOnly, velocity):
         "clustering_tcc/cluster.tsv",
         "clustering_tcc/barcode_cluster.tsv",
         "clustering_tcc/preprocessed.pdf",
-        "clustering_tcc/clustering.pdf"
+        "clustering_tcc/clustering.pdf",
+        "transcripts_quant/gene_merged.mtx",
+        "transcripts_quant/barcodes_gene_merged.txt",
+        "transcripts_quant/genes_gene_merged.txt"
         ]
         file_list += runVelocity()
     return(file_list)

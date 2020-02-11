@@ -85,4 +85,23 @@ rule cluster_tcc:
     conda: CONDA_SHARED_ENV
     shell:
         "{params.clustering} -o {params.out_dir} -s {input.mtx} -b {input.bc} -v {input.ECmap} \
-        --cells 5 --count 20 --genes 100 --dispersity 0.5 --normalize 1e6 -g {col_groups} > {log} 2>&1"
+        --cells 5 --count 10 --genes 5 --dispersity 0.5 --normalize 1e6 -g {col_groups} > {log} 2>&1"
+
+rule merge_genes:
+    input:
+        mtx = expand("transcripts_quant/{sample}/gene_counts/output.mtx", sample = samples),
+        barcodes = expand("transcripts_quant/{sample}/gene_counts/output.barcodes.txt", sample = samples),
+        genes = expand("transcripts_quant/{sample}/gene_counts/output.genes.txt", sample = samples)
+    output:
+        merged_mtx = "transcripts_quant/gene_merged.mtx",
+        merged_barcodes = "transcripts_quant/barcodes_gene_merged.txt",
+        merged_genes = "transcripts_quant/genes_gene_merged.txt"
+    params:
+        pyscript = os.path.join(workflow.basedir, "tools", "merge_genes_wrapper.py"),
+        out_dir =  "transcripts_quant/",
+        samples = ",".join(expand("{sample}", sample = samples))
+    log: "logs/merge_genes.out"
+    threads: 1
+    conda: CONDA_SHARED_ENV
+    shell:
+        "echo {params.samples} && {params.pyscript} -s {params.samples} -o {params.out_dir} > {log} 2>&1"
