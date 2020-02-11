@@ -104,4 +104,4 @@ rule merge_genes:
     threads: 1
     conda: CONDA_SHARED_ENV
     shell:
-        "echo {params.samples} && {params.pyscript} -s {params.samples} -o {params.out_dir} > {log} 2>&1"
+        "{params.pyscript} -s {params.samples} -o {params.out_dir} > {log} 2>&1"

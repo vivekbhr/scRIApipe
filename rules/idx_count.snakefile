@@ -103,7 +103,9 @@ rule get_geneCounts:
         transcripts = "transcripts_quant/{sample}/transcripts.txt",
         busfile = "transcripts_quant/{sample}/output.correct.sort.bus"
     output:
-         mtx = "transcripts_quant/{sample}/gene_counts/output.mtx"
+         mtx = "transcripts_quant/{sample}/gene_counts/output.mtx",
+         txt = "transcripts_quant/{sample}/gene_counts/output.genes.txt",
+         bc = "transcripts_quant/{sample}/gene_counts/output.barcodes.txt"
     params:
         out = "transcripts_quant/{sample}/gene_counts/",
         bustools = os.path.join(workflow.basedir, "tools", "bustools")

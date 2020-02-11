@@ -47,9 +47,7 @@ samples = get_sample_names(infiles,ext,reads)
 include: os.path.join(workflow.basedir, "rules", "fastq.snakefile")
 include: os.path.join(workflow.basedir, "rules", "idx_count.snakefile")
 include: os.path.join(workflow.basedir, "rules", "tcc_clustering.snakefile")
-
-if velocity:
-    include: os.path.join(workflow.basedir, "rules", "velocity.snakefile")
+include: os.path.join(workflow.basedir, "rules", "velocity.snakefile")
 
 ### conditional/optional rules #################################################
 ################################################################################
@@ -80,17 +78,16 @@ def runVelocity():
     else:
         return([])
 
-def getIdx(idxOnly, velocity):
+def getIdx(idxOnly):
     file_list = [
     expand("FASTQ/FastQC/{sample}{read}_fastqc.html", sample = samples, read=reads),
     "annotations/cDNA_tx_to_capture.txt",
     "annotations/tr2g.tsv",
     "annotations/gtf.txdb",
     "annotations/cDNA.all.idx",
-    "annotations/cDNA_introns.fa"
+    "annotations/cDNA_introns.fa",
+    "annotations/cDNA_introns.idx"
     ]
-    if velocity:
-        file_list += ["annotations/cDNA_introns.idx"]
     if not idxOnly:
         file_list += [
         expand("transcripts_quant/{sample}/output.correct.sort.bus", sample = samples),
@@ -107,7 +104,6 @@ def getIdx(idxOnly, velocity):
         "transcripts_quant/barcodes_gene_merged.txt",
         "transcripts_quant/genes_gene_merged.txt"
         ]
-        file_list += runVelocity()
     return(file_list)
 ### main rule ##################################################################
 ################################################################################
@@ -115,7 +111,8 @@ localrules: FASTQ1, FASTQ2
 rule all:
     input:
         runTrimming(trim),
-        getIdx(idxOnly, velocity)
+        getIdx(idxOnly),
+        runVelocity()
 
 ### execute after workflow finished ############################################
 ################################################################################
