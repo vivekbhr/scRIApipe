@@ -66,8 +66,6 @@ def runTrimming(trim):
 def runVelocity():
     if velocity:
         file_list = [
-        "annotations/cDNA_introns.fa",
-        "annotations/cDNA_introns.idx",
         expand("velocity_quant/{sample}/output.correct.sort.bus", sample = samples),
         expand("velocity_quant/{sample}/spliced.bus", sample = samples),
         expand("velocity_quant/{sample}/unspliced.bus", sample = samples),
@@ -92,7 +90,7 @@ def getIdx(idxOnly, velocity):
     "annotations/cDNA_introns.fa"
     ]
     if velocity:
-        file_list += "annotations/cDNA_introns.idx"
+        file_list += ["annotations/cDNA_introns.idx"]
     if not idxOnly:
         file_list += [
         expand("transcripts_quant/{sample}/output.correct.sort.bus", sample = samples),
@@ -106,6 +104,7 @@ def getIdx(idxOnly, velocity):
         "clustering_tcc/preprocessed.pdf",
         "clustering_tcc/clustering.pdf"
         ]
+        file_list += runVelocity()
     return(file_list)
 ### main rule ##################################################################
 ################################################################################
@@ -113,8 +112,7 @@ localrules: FASTQ1, FASTQ2
 rule all:
     input:
         runTrimming(trim),
-        getIdx(idxOnly, velocity),
-        runVelocity()
+        getIdx(idxOnly, velocity)
 
 ### execute after workflow finished ############################################
 ################################################################################
