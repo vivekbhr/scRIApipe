@@ -85,7 +85,7 @@ rule cluster_tcc:
     conda: CONDA_SHARED_ENV
     shell:
         "{params.clustering} -o {params.out_dir} -s {input.mtx} -b {input.bc} -v {input.ECmap} \
-        --cells 5 --count 10 --genes 5 --dispersity 0.5 --normalize 1e6 -g {col_groups} > {log} 2>&1"
+        --cells 5 --count 10 --genes 5 --dispersity 0.5 --normalize 1e6 -g {col_groups} -ci 2 > {log} 2>&1"
 
 rule merge_genes:
     input:
@@ -94,7 +94,7 @@ rule merge_genes:
         genes = expand("transcripts_quant/{sample}/gene_counts/output.genes.txt", sample = samples)
     output:
         merged_mtx = "transcripts_quant/gene_merged.mtx",
-        merged_barcodes = "transcripts_quant/barcodes_gene_merged.txt",
+        merged_bc = "transcripts_quant/barcodes_gene_merged.txt",
         merged_genes = "transcripts_quant/genes_gene_merged.txt"
     params:
         pyscript = os.path.join(workflow.basedir, "tools", "merge_genes_wrapper.py"),
@@ -105,3 +105,24 @@ rule merge_genes:
     conda: CONDA_SHARED_ENV
     shell:
         "{params.pyscript} -s {params.samples} -o {params.out_dir} > {log} 2>&1"
+
+rule cluster_genes:
+    input:
+        mtx = "transcripts_quant/gene_merged.mtx",
+        bc = "transcripts_quant/barcodes_gene_merged.txt",
+        genes = "transcripts_quant/genes_gene_merged.txt"
+    output:
+        preprocessed = "clustering_genes/preprocessed.tsv",
+        cluster = "clustering_genes/cluster.tsv",
+        cl_bc = "clustering_genes/barcode_cluster.tsv",
+        preprocessed_fig = "clustering_genes/preprocessed.pdf",
+        cluster_fig = "clustering_genes/clustering.pdf"
+    params:
+        clustering = os.path.join(workflow.basedir, "tools", "clustering_wrapper.py"),
+        out_dir = "clustering_genes"
+    log: "logs/cluster_genes.out"
+    threads: 1
+    conda: CONDA_SHARED_ENV
+    shell:
+        "{params.clustering} -o {params.out_dir} -s {input.mtx} -b {input.bc} -v {input.genes} \
+        --cells 5 --count 10 --genes 1 --dispersity 0.5 --normalize 1e6 -g {col_groups} -ci 0 > {log} 2>&1"

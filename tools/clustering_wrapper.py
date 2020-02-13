@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 import matplotlib.backends.backend_pdf
 
 # load matrix as AnnData object
-def get_matrix(countFile, outdir, barcodes, varlist, groups):
+def get_matrix(countFile, outdir, barcodes, varlist, groups, colIdx):
     # load adata
     adata = sc.read_mtx(countFile)
 
@@ -38,7 +38,7 @@ def get_matrix(countFile, outdir, barcodes, varlist, groups):
     adata.obs['barcode'] = obs_new[2].astype('category').values
 
     # set index
-    adata.var.index = pd.read_csv(varlist, sep='\t', header=None)[2].astype('category').values
+    adata.var.index = pd.read_csv(varlist, sep='\t', header=None)[colIdx].astype('category').values
 
     # add predivined group
     group_keys = None
@@ -189,6 +189,13 @@ def parse_args(defaults=None):
                           default=None,
                           type=str)
 
+    parser.add_argument("-ci", "--columnIndex",
+                          dest="column_index",
+                          required=True,
+                          help="provide column index to select indexing file column",
+                          default=None,
+                          type=int)
+
     parser.add_argument("-g", "--groups",
                           dest="col_groups",
                           required=False,
@@ -253,12 +260,13 @@ def main():
 
     # get matrix
     print("get matrix")
-    adata, group_keys = get_matrix(args.sample, outdir, args.barcodes, args.varlist, args.col_groups)
-    
+    adata, group_keys = get_matrix(args.sample, outdir, args.barcodes, args.varlist, args.col_groups, args.column_index)
+
     print("start preprocessing")
     adata = preprocess(adata, outdir, args.cells, args.genes,
                                       args.count, args.dispersity,
                                       args.normalize, args.highlyvar)
+    #print(adata.X)
     print("start clustering")
     barcode_cluster = clustercells(adata, outdir, group_keys)
 

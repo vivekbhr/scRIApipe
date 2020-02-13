@@ -15,6 +15,7 @@ import textwrap
 # import for merging
 import numpy as np
 import pandas as pd
+import scanpy as sc
 import scipy.io
 
 # parse arguments from commandline
@@ -48,53 +49,32 @@ def parse_args(defaults=None):
 
 
 def merge_files(samples, out_dir):
+    # open each file as anndata
+    adata_list = []
+
     # read mtx file
-    print("reading first mtx file")
-    mtx = scipy.io.mmread(out_dir+samples[0]+'/gene_counts/output.mtx')
-    X = mtx.todense()
-
-    # read barcode file and set as obs
-    print("reading barcode file")
-    barcodes = pd.read_csv(out_dir+samples[0]+'/gene_counts/output.barcodes.txt', header=None, sep=' ')[0].values
-    barcodes = samples[0] + '_' + barcodes
-    # read gene file and set as var
-    print("reading gene file")
-    genes = pd.read_csv(out_dir+samples[0]+'/gene_counts/output.genes.txt', header=None, sep=' ')[0].values
-
-    # make df
-    print("making first df")
-    df_old = pd.DataFrame(X, columns=genes, index=barcodes).astype(int)
-
-    for sample in samples[1::]:
-        print("sample: {}".format(sample))
-        # read mtx file
-        mtx = scipy.io.mmread(out_dir+sample+'/gene_counts/output.mtx')
-        X = mtx.todense()
+    for i in range(len(samples)):
+        adata_list += [sc.read_mtx('transcripts_quant/'+samples[i]+'/gene_counts/output.mtx')]
 
         # read barcode file and set as obs
-        barcodes = pd.read_csv(out_dir+sample+'/gene_counts/output.barcodes.txt', header=None, sep=' ')[0].values
-        barcodes = sample + '_' + barcodes
-        # read gene file and set as var
-        genes = pd.read_csv(out_dir+sample+'/gene_counts/output.genes.txt', header=None, sep=' ')[0].values
+        barcodes = pd.read_csv('transcripts_quant/'+samples[i]+'/gene_counts/output.barcodes.txt', header=None)[0].values
+        barcodes = samples[i] + '_' + barcodes # could also do this at the concatination step
+        genes = pd.read_csv('transcripts_quant/'+samples[i]+'/gene_counts/output.genes.txt', header=None)[0].values
 
-        # make df
-        df_new = pd.DataFrame(X, columns=genes, index=barcodes).astype(int)
+        # store obs and var
+        adata_list[i].obs.index = barcodes
+        adata_list[i].var.index = genes
 
-        # concatenate new to total
-        df_old = df_old.append(df_new)
+    # concatenate all anndata objects
+    if len(samples) > 0:
+        con_adata = adata_list[0].concatenate(adata_list[1:len(samples)], join='outer', index_unique=None)
+    else:
+        con_adata = adata_list[0]
 
-    # store final result
-    scipy.io.mmwrite(out_dir+"gene_merged", scipy.sparse.csr_matrix(df_old))
-
-    # store barcodes in format: sample_barcode
-    barcode_file = open(out_dir+'barcodes_gene_merged.txt', 'w')
-    barcode_file.write('\n'.join(df_old.index.values))
-    barcode_file.close()
-
-    # store genes
-    genes_file = open(out_dir+'genes_gene_merged.txt', 'w')
-    genes_file.write('\n'.join(df_old.columns.values))
-    genes_file.close()
+    # store result
+    scipy.io.mmwrite(out_dir +'gene_merged', con_adata.X.astype(int))
+    con_adata.obs.drop('batch', axis=1).to_csv(out_dir + 'barcodes_gene_merged.txt', header=None)
+    con_adata.var.to_csv(out_dir + 'genes_gene_merged.txt', header=None)
 
 def main():
     print("parsing arguments")

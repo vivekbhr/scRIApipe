@@ -102,7 +102,12 @@ def getIdx(idxOnly):
         "clustering_tcc/clustering.pdf",
         "transcripts_quant/gene_merged.mtx",
         "transcripts_quant/barcodes_gene_merged.txt",
-        "transcripts_quant/genes_gene_merged.txt"
+        "transcripts_quant/genes_gene_merged.txt",
+        "clustering_genes/preprocessed.tsv",
+        "clustering_genes/cluster.tsv",
+        "clustering_genes/barcode_cluster.tsv",
+        "clustering_genes/preprocessed.pdf",
+        "clustering_genes/clustering.pdf"
         ]
     return(file_list)
 ### main rule ##################################################################
