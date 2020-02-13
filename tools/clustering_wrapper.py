@@ -17,7 +17,7 @@ import textwrap
 import pandas as pd
 import scanpy as sc
 import numpy as np
-import scipy as scp
+import scipy.io
 
 # for plots
 import matplotlib
@@ -77,26 +77,26 @@ def preprocess(adata, outdir, mcells, mgenes, mcounts, md, ntotal, highlyvar):
         adata.raw = adata
 
         # look at highly variable genes/ec
-        sc.pp.highly_variable_genes(adata, min_mean=0.25, max_mean=6,
-                                    min_disp=0.5, inplace=True)
-        fig3 = sc.pl.highly_variable_genes(adata, return_fig=True)
+        # sc.pp.highly_variable_genes(adata, min_mean=0.25, max_mean=6,
+        #                             min_disp=0.5, inplace=True)
+        # sc.pl.highly_variable_genes(adata, save=outdir+'/highly_variable_genes.pdf')
         #actually filter for highly variable genes/ec
         sc.pp.highly_variable_genes(adata, min_mean=0.25, max_mean=6,
                                     min_disp=0.5, inplace=True, subset=True)
 
     # store adata object
-    adata.to_df().to_csv(outdir+"/preprocessed.tsv", sep='\t', header=True)
+    #scipy.io.mmwrite(outdir+"/preprocessed", adata.X)
+    #adata.to_df().to_csv(outdir+"/preprocessed.tsv", sep='\t', header=True)
 
     # save figures close pdf file
     pdf.savefig(fig1)
     pdf.savefig(fig2)
-    if highlyvar == True:
-        pdf.savefig(fig3)
+    # if highlyvar == True:
+    #     pdf.savefig(fig3)
     pdf.close()
 
     return(adata)
 
-# cluster cells use louvain clustering
 # cluster cells use louvain clustering
 def clustercells(adata, outdir, group_keys):
     # open pdf file for plots
@@ -133,8 +133,12 @@ def clustercells(adata, outdir, group_keys):
         barcode_cluster = adata.obs.loc[:,['louvain'] + group_keys.to_list()]
     barcode_cluster.to_csv(outdir+"/barcode_cluster.tsv", sep="\t")
 
+    # store genes
+    adata.var.to_csv(outdir+"/var_cluster.tsv", sep="\t")
+
     # store adata object
-    adata.to_df().to_csv(outdir+"/cluster.tsv", sep='\t', header=True)
+    scipy.io.mmwrite(outdir+"/cluster", adata.X)
+    #adata.to_df().to_csv(outdir+"/cluster.tsv", sep='\t', header=True)
 
     # save figures and close pdf
     pdf.savefig(fig1)
@@ -239,6 +243,7 @@ def parse_args(defaults=None):
 
     parser.add_argument("-hv", "--highly-variable",
                          dest="highlyvar",
+                         action = 'store_true',
                          required=False,
                          help="to turn on filtering for highly variable genes/TCCs",
                          default=False)

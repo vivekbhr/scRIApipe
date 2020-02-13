@@ -72,9 +72,10 @@ rule cluster_tcc:
         ECmap = "transcripts_quant/ECs_filtered_merged.txt",
         bc = "transcripts_quant/barcodes_merged.txt"
     output:
-        preprocessed = "clustering_tcc/preprocessed.tsv",
-        cluster = "clustering_tcc/cluster.tsv",
+        #preprocessed = "clustering_tcc/preprocessed.tsv",
+        cluster = "clustering_tcc/cluster.mtx",
         cl_bc = "clustering_tcc/barcode_cluster.tsv",
+        cl_var = "clustering_tcc/var_cluster.tsv",
         preprocessed_fig = "clustering_tcc/preprocessed.pdf",
         cluster_fig = "clustering_tcc/clustering.pdf"
     params:
@@ -112,9 +113,10 @@ rule cluster_genes:
         bc = "transcripts_quant/barcodes_gene_merged.txt",
         genes = "transcripts_quant/genes_gene_merged.txt"
     output:
-        preprocessed = "clustering_genes/preprocessed.tsv",
-        cluster = "clustering_genes/cluster.tsv",
+        #preprocessed = "clustering_genes/preprocessed.tsv",
+        cluster = "clustering_genes/cluster.mtx",
         cl_bc = "clustering_genes/barcode_cluster.tsv",
+        cl_var = "clustering_genes/var_cluster.tsv",
         preprocessed_fig = "clustering_genes/preprocessed.pdf",
         cluster_fig = "clustering_genes/clustering.pdf"
     params:
