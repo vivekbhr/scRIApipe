@@ -49,6 +49,8 @@ def get_matrix(countFile, outdir, barcodes, varlist, groups, colIdx):
         obs_groups = obs_groups[group_keys].astype('category') # assumed category based but maybe make this optional for continues scales
         adata.obs = adata.obs.merge(obs_groups, how='left', left_index=True, right_index=True)
 
+    print("Data before filtering:")
+    print(adata)
     return(adata, group_keys)
 
 # preprocess tcc/gene matrix
@@ -62,6 +64,8 @@ def preprocess(adata, outdir, mcells, mgenes, mcounts, md, ntotal, highlyvar):
     sc.pp.filter_cells(adata, min_genes= mgenes)
     sc.pp.filter_cells(adata, min_counts= mcounts)
     sc.pp.filter_genes(adata, min_cells = mcells)
+    print("After basic filtering:")
+    print(adata)
 
     # plot to see count distribution and gene distrubution
     fig1 = sc.pl.violin(adata, 'n_counts', jitter=0.4, return_fig=True)
@@ -83,6 +87,9 @@ def preprocess(adata, outdir, mcells, mgenes, mcounts, md, ntotal, highlyvar):
         #actually filter for highly variable genes/ec
         sc.pp.highly_variable_genes(adata, min_mean=0.25, max_mean=6,
                                     min_disp=0.5, inplace=True, subset=True)
+
+        print("After selection highly variable genes/TCCs:")
+        print(adata)
 
     # store adata object
     #scipy.io.mmwrite(outdir+"/preprocessed", adata.X)
@@ -262,6 +269,13 @@ def main():
     # correct for passing 'None' by
     if args.col_groups == 'None':
         args.col_groups = None
+
+    print("parameters that were used:")
+    print("clustering_wrapper: \n--outdir {} \n--sample {} \n--barcodes {} \n--varlist {} \
+            \n--columnIndex {} \n--groups {} \n--cells {} \n--count {} \
+            \n--genes {} \n--dispersity {} \n--normalize {} \n--highly-variable {}".format(args.outdir,
+            args.sample, args.barcodes, args.varlist, args.column_index, args.col_groups,
+            args.cells, args.count, args.genes, args.dispersity, args.normalize, args.highlyvar))
 
     # get matrix
     print("get matrix")

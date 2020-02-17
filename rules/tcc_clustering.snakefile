@@ -86,7 +86,7 @@ rule cluster_tcc:
     conda: CONDA_SHARED_ENV
     shell:
         "{params.clustering} -o {params.out_dir} -s {input.mtx} -b {input.bc} -v {input.ECmap} \
-        --cells 5 --count 10 --genes 5 --dispersity 0.5 --normalize 1e6 -g {col_groups} -ci 2 > {log} 2>&1"
+        --cells 5 --count 50 --genes 5 --dispersity 0.5 --normalize 1e4 -g {col_groups} -ci 2 > {log} 2>&1"
 
 rule merge_genes:
     input:
@@ -127,4 +127,4 @@ rule cluster_genes:
     conda: CONDA_SHARED_ENV
     shell:
         "{params.clustering} -o {params.out_dir} -s {input.mtx} -b {input.bc} -v {input.genes} \
-        --cells 5 --count 10 --genes 1 --dispersity 0.5 --normalize 1e6 -g {col_groups} -ci 0 > {log} 2>&1"
+        --cells 5 --count 50 --genes 5 --dispersity 0.5 --normalize 1e4 -g {col_groups} -ci 0 -hv > {log} 2>&1"
