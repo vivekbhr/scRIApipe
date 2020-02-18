@@ -85,7 +85,7 @@ def getIdx(idxOnly):
     "annotations/cDNA_tx_to_capture.txt",
     "annotations/tr2g.tsv",
     "annotations/gtf.txdb",
-    "annotations/cDNA.all.idx",
+    "annotations/cDNA.idx",
     "annotations/cDNA_introns.fa",
     "annotations/cDNA_introns.idx"
     ]
@@ -95,7 +95,7 @@ def getIdx(idxOnly):
         expand("transcripts_quant/{sample}/eq_counts/output.mtx", sample = samples),
         expand("transcripts_quant/{sample}/gene_counts/output.mtx", sample = samples),
         expand("transcripts_quant/{sample}/output.txt", sample = samples),
-        expand("transcripts_quant/{sample}/eq_counts/ECtoGene_map.txt", sample = samples),
+        expand("transcripts_quant/{sample}/eq_counts/ec-to-gene.txt", sample = samples),
         #"clustering_tcc/preprocessed.tsv",
         "clustering_tcc/cluster.mtx",
         "clustering_tcc/barcode_cluster.tsv",

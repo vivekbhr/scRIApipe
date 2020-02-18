@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 import matplotlib.backends.backend_pdf
 
 # load matrix as AnnData object
-def get_matrix(countFile, outdir, barcodes, varlist, groups, colIdx):
+def get_matrix(countFile, outdir, barcodes, varlist, groups, colIdx, extendedVar, type):
     # load adata
     adata = sc.read_mtx(countFile)
 
@@ -38,7 +38,12 @@ def get_matrix(countFile, outdir, barcodes, varlist, groups, colIdx):
     adata.obs['barcode'] = obs_new[2].astype('category').values
 
     # set index
-    adata.var.index = pd.read_csv(varlist, sep='\t', header=None)[colIdx].astype('category').values
+    adata.var.index = pd.read_csv(varlist, sep='\t', header=None)[colIdx].astype('str').values
+
+    # extend variable df assumes same index
+    if extendedVar is not None and type == 'genes':
+        exVar = pd.read_csv(extendedVar, sep='\t', header=None, index_col=0)
+        adata.var = pd.merge(adata.var, exVar, left_index=True, right_index=True, how='left')
 
     # add predivined group
     group_keys = None
@@ -49,7 +54,8 @@ def get_matrix(countFile, outdir, barcodes, varlist, groups, colIdx):
         obs_groups = obs_groups[group_keys].astype('category') # assumed category based but maybe make this optional for continues scales
         adata.obs = adata.obs.merge(obs_groups, how='left', left_index=True, right_index=True)
 
-    print("Data before filtering:")
+    # color by gene
+    print("\nData before filtering:")
     print(adata)
     return(adata, group_keys)
 
@@ -64,7 +70,7 @@ def preprocess(adata, outdir, mcells, mgenes, mcounts, md, ntotal, highlyvar):
     sc.pp.filter_cells(adata, min_genes= mgenes)
     sc.pp.filter_cells(adata, min_counts= mcounts)
     sc.pp.filter_genes(adata, min_cells = mcells)
-    print("After basic filtering:")
+    print("\nAfter basic filtering:")
     print(adata)
 
     # plot to see count distribution and gene distrubution
@@ -86,9 +92,9 @@ def preprocess(adata, outdir, mcells, mgenes, mcounts, md, ntotal, highlyvar):
         # sc.pl.highly_variable_genes(adata, save=outdir+'/highly_variable_genes.pdf')
         #actually filter for highly variable genes/ec
         sc.pp.highly_variable_genes(adata, min_mean=0.25, max_mean=6,
-                                    min_disp=0.5, inplace=True, subset=True)
+                                    min_disp=md, inplace=True, subset=True)
 
-        print("After selection highly variable genes/TCCs:")
+        print("\nAfter selection highly variable genes/TCCs:")
         print(adata)
 
     # store adata object
@@ -134,11 +140,12 @@ def clustercells(adata, outdir, group_keys):
             fig5 = sc.pl.umap(adata, color=key, return_fig=True)
 
     # save barcode cluster tsv
-    if group_keys is None:
-        barcode_cluster = adata.obs.loc[:,'louvain']
-    else:
-        barcode_cluster = adata.obs.loc[:,['louvain'] + group_keys.to_list()]
-    barcode_cluster.to_csv(outdir+"/barcode_cluster.tsv", sep="\t")
+    # if group_keys is None:
+    #     barcode_cluster = adata.obs.loc[:,'louvain']
+    # else:
+    #     barcode_cluster = adata.obs.loc[:,['louvain'] + group_keys.to_list()]
+    # barcode_cluster.to_csv(outdir+"/barcode_cluster.tsv", sep="\t")
+    adata.obs.to_csv(outdir+"/barcode_cluster.tsv", sep="\t")
 
     # store genes
     adata.var.to_csv(outdir+"/var_cluster.tsv", sep="\t")
@@ -196,21 +203,26 @@ def parse_args(defaults=None):
     parser.add_argument("-v", "--varlist",
                           dest="varlist",
                           required=True,
-                          help="provide ec/gene name file",
+                          help="provide file with ordered variables",
                           default=None,
                           type=str)
 
-    parser.add_argument("-ci", "--columnIndex",
-                          dest="column_index",
+    parser.add_argument("-t", "--type",
+                          dest="type",
                           required=True,
-                          help="provide column index to select indexing file column",
-                          default=None,
-                          type=int)
+                          help="provide type of data ECs or genes",
+                          type=str)
 
     parser.add_argument("-g", "--groups",
                           dest="col_groups",
                           required=False,
                           help="file indicating cell types matching tcc.mtx",
+                          default=None)
+
+    parser.add_argument("-ev", "--extendedVar",
+                          dest="extendedVar",
+                          required=False,
+                          help="tsv file containing additional information to load into AnnData var e.g. gene name, chromosome or biotype",
                           default=None)
 
     parser.add_argument("--cells",
@@ -269,24 +281,32 @@ def main():
     # correct for passing 'None' by
     if args.col_groups == 'None':
         args.col_groups = None
+    if args.extendedVar == 'None':
+        args.extendedVar = None
+
+    if args.type == 'genes':
+        colIdx = 0
+    elif args.type == 'ECs':
+        colIdx = 2
 
     print("parameters that were used:")
     print("clustering_wrapper: \n--outdir {} \n--sample {} \n--barcodes {} \n--varlist {} \
-            \n--columnIndex {} \n--groups {} \n--cells {} \n--count {} \
+            \n--type {} \n--groups {} \n--cells {} \n--count {} \
             \n--genes {} \n--dispersity {} \n--normalize {} \n--highly-variable {}".format(args.outdir,
-            args.sample, args.barcodes, args.varlist, args.column_index, args.col_groups,
+            args.sample, args.barcodes, args.varlist, args.type, args.col_groups,
             args.cells, args.count, args.genes, args.dispersity, args.normalize, args.highlyvar))
 
     # get matrix
-    print("get matrix")
-    adata, group_keys = get_matrix(args.sample, outdir, args.barcodes, args.varlist, args.col_groups, args.column_index)
+    print("\nget matrix")
+    adata, group_keys = get_matrix(args.sample, outdir, args.barcodes, args.varlist,
+                                   args.col_groups, colIdx, args.extendedVar, args.type)
 
-    print("start preprocessing")
+    print("\nstart preprocessing")
     adata = preprocess(adata, outdir, args.cells, args.genes,
                                       args.count, args.dispersity,
                                       args.normalize, args.highlyvar)
     #print(adata.X)
-    print("start clustering")
+    print("\nstart clustering")
     barcode_cluster = clustercells(adata, outdir, group_keys)
 
 if __name__ == "__main__":

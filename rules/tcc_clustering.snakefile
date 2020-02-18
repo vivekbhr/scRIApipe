@@ -89,7 +89,7 @@ rule cluster_tcc:
     conda: CONDA_SHARED_ENV
     shell:
         "{params.clustering} -o {params.out_dir} -s {input.mtx} -b {input.bc} -v {input.ECmap} \
-        --cells 5 --count 50 --genes 5 --dispersity 0.5 --normalize 1e4 -g {col_groups} -ci 2 > {log} 2>&1"
+        --cells 5 --count 1000 --genes 100 --normalize 1e4 -g {col_groups} -t ECs > {log} 2>&1"
 
 rule merge_genes:
     input:
@@ -125,9 +125,11 @@ rule cluster_genes:
     params:
         clustering = os.path.join(workflow.basedir, "tools", "clustering_wrapper.py"),
         out_dir = "clustering_genes"
+        extendedVar = extendedVar
     log: "logs/cluster_genes.out"
     threads: 1
     conda: CONDA_SHARED_ENV
     shell:
         "{params.clustering} -o {params.out_dir} -s {input.mtx} -b {input.bc} -v {input.genes} \
-        --cells 5 --count 50 --genes 5 --dispersity 0.5 --normalize 1e4 -g {col_groups} -ci 0 -hv > {log} 2>&1"
+        --cells 5 --count 1000 --genes 100 --dispersity 0.5 --normalize 1e4 -g {col_groups} \
+        -t genes -hv -ev extendedVar > {log} 2>&1"
