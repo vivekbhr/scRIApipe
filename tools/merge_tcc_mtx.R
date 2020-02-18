@@ -5,37 +5,66 @@
 library(Matrix)
 Args <- commandArgs(trailingOnly = TRUE)
 
-matrixFileList <- Args[1] #c("transcripts_quant/ESC_merged/eq_counts/tcc.mtx", "transcripts_quant/NPC_merged/eq_counts/tcc.mtx")
-ecMapList <- Args[2] #c("test/ESC_EC_subset_merged.txt", "test/NPC_EC_subset_merged.txt")
-bclist <- Args[3] # "transcripts_quant/{sample}/eq_counts/tcc.barcodes.txt"
-samples <- Args[4] # {sample}
+matrixFileList <- Args[1] #"c("transcripts_quant/ESC_merged/eq_counts/output.mtx,transcripts_quant/NPC_merged/eq_counts/output.mtx")
+ecList.filtered <- Args[2] #"transcripts_quant/ESC_merged/eq_counts/ECtoGene_map.txt", "transcripts_quant/NPC_merged/eq_counts/ECtoGene_map.txt"
+ecList.unfiltered <- Args[3] #"transcripts_quant/ESC_merged/eq_counts/output.ec.txt", "transcripts_quant/NPC_merged/eq_counts/output.ec.txt"
+bclist <- Args[4] # "transcripts_quant/ESC_merged/eq_counts/output.barcodes.txt,transcripts_quant/NPC_merged/eq_counts/output.barcodes.txt"
+samples <- Args[5] # "ESC,NPC"
+mergeBy <- Args[6] # EC or TxSet
 
-out_mtx <- Args[5] # output merged mtx file
-out_ec <- Args[6] # output EC-gene-txmap
-out_bc <- Args[7] # output cell barcodes
+out_mtx <- Args[7] # output merged mtx file
+out_ec <- Args[8] # output EC-gene-txmap
+out_bc <- Args[9] # output cell barcodes
+
+
 matrixFileList <- trimws(unlist(strsplit(matrixFileList, ",", fixed = TRUE)))
-ecMapList <- trimws(unlist(strsplit(ecMapList, ",", fixed = TRUE)))
+ecList.filtered <- trimws(unlist(strsplit(ecList.filtered, ",", fixed = TRUE)))
+ecList.unfiltered <- trimws(unlist(strsplit(ecList.unfiltered, ",", fixed = TRUE)))
 bclist <- trimws(unlist(strsplit(bclist, ",", fixed = TRUE)))
 samples <- trimws(unlist(strsplit(samples, ",", fixed = TRUE)))
-
-## merge the EC map list based on the contained transcripts
-eclist <- lapply(ecMapList, read.delim, header = FALSE,
-                 col.names = c("EC", "Gene", "TxSet"), stringsAsFactors = FALSE)
-eclist <- na.omit(Reduce(function(x,y) merge(x, y, by = "TxSet"), eclist))
-
-eclist1 <- eclist[ , grepl("EC", colnames(eclist))]
-eclist2 <- cbind(eclist[,c("Gene.x", "TxSet")], eclist1)
 
 ## merge barcodes
 bclist <- lapply(bclist, read.table, header = FALSE, stringsAsFactors = F)
 bclist <- lapply(seq_along(bclist), function(n) paste(samples[n], bclist[[n]]$V1, sep = "_"))
 
-## subset all matrices based on the merged EClist and merge them
-subset_mtxList <- mapply(function(mtx, ec){
-  ec_counts <- readMM(mtx)
-  return(ec_counts[, ec + 1])# added 1 again, as the EC ids are 0-indexed
-}, matrixFileList, eclist1)
 
+## merge the EC map list based on the contained transcripts or ECs (depending on "mergeBy")
+eclist <- lapply(ecList.filtered, read.delim, header = FALSE,
+                 col.names = c("EC", "TxSet", "Gene"), stringsAsFactors = FALSE)
+
+## first subset the mtx for each sample based on it's own filtered ECs
+mtxlist <- lapply(seq_along(matrixFileList), function(n){
+    ec_counts <- readMM(matrixFileList[n])
+    ecIDs <- read.delim(ecList.unfiltered[n], header = F)$V1
+    keptEC <- ecIDs %in% eclist[[n]]$EC
+    outmtx <- ec_counts[, keptEC]
+    colnames(outmtx) <- ecIDs[keptEC]
+    return(outmtx)
+})
+
+  
+## then subset for ECs that match across samples (dropping ECs specific to only one sample)
+if(mergeBy == "EC") {
+  eclist.match <- na.omit(plyr::join_all(eclist, by = "EC", type = "inner"))
+  eclist2 <- eclist.match[1:3]
+  subset_mtxList <- lapply(seq_along(mtxlist), function(n){
+    mt <- mtxlist[[n]]
+    keptEC <- colnames(mt) %in% as.character(eclist.match$EC)
+    return(mt[, keptEC]) })
+
+} else {
+  eclist.match <- na.omit(plyr::join_all(eclist, by = "TxSet", type = "inner"))
+  eclist1 <- eclist.match[ , grepl("EC", colnames(eclist.match))]
+  eclist2 <- cbind(eclist.match[,c("Gene", "TxSet")], eclist1)
+  ## subset all matrices based on the merged EClist and merge them (keeps more ECs than the one above)
+  subset_mtxList <- lapply(seq_along(mtxlist), function(n){
+    mt <- mtxlist[[n]]
+    keptEC <- colnames(mt) %in% as.character(eclist1[, n])
+    return(mt[, keptEC])
+  })
+}
+
+## write outputs
 writeMM(Reduce(rbind, subset_mtxList), file = out_mtx)
 write.table(eclist2, file = out_ec, sep = "\t", row.names = F, col.names = F, quote = F)
 write.table(unlist(bclist), file = out_bc, sep = "\n", row.names = F, col.names = F, quote = F)
