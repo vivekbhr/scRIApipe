@@ -38,12 +38,22 @@ def get_matrix(countFile, outdir, barcodes, varlist, groups, colIdx, extendedVar
     adata.obs['barcode'] = obs_new[2].astype('category').values
 
     # set index
-    adata.var.index = pd.read_csv(varlist, sep='\t', header=None)[colIdx].astype('str').values
+    var = pd.read_csv(varlist, sep='\t', header=None, index_col=colIdx)
+    if type == 'ECs':
+        var.index = var.index.astype('str').values
+        var.drop([1,3], axis=1, inplace=True)
+        var.columns = ['geneID']
+        adata.var = var
+    elif type == 'genes':
+        adata.var.index = var.index.values
 
     # extend variable df assumes same index
     if extendedVar is not None and type == 'genes':
         exVar = pd.read_csv(extendedVar, sep='\t', header=None, index_col=0)
         adata.var = pd.merge(adata.var, exVar, left_index=True, right_index=True, how='left')
+    elif extendedVar is not None and type == 'ECs':
+        exVar = pd.read_csv(extendedVar, sep='\t', header=None, index_col=0)
+        adata.var = pd.merge(adata.var, exVar, left_on='geneID', right_index=True, how='left')
 
     # add predivined group
     group_keys = None
