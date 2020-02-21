@@ -83,13 +83,15 @@ rule cluster_tcc:
         cluster_fig = "clustering_tcc/clustering.pdf"
     params:
         clustering = os.path.join(workflow.basedir, "tools", "clustering_wrapper.py"),
-        out_dir = "clustering_tcc"
+        out_dir = "clustering_tcc",
+        extendedVar = extendedVar
     log: "logs/cluster_tcc.out"
     threads: 1
     conda: CONDA_SHARED_ENV
     shell:
         "{params.clustering} -o {params.out_dir} -s {input.mtx} -b {input.bc} -v {input.ECmap} \
-        --cells 5 --count 50 --genes 5 --dispersity 0.5 --normalize 1e4 -g {col_groups} -ci 2 > {log} 2>&1"
+        --cells 1 --count 1 --genes 1 --normalize 1e4 -g {col_groups} \
+        -t ECs -ev {params.extendedVar} > {log} 2>&1"
 
 rule merge_genes:
     input:
@@ -124,10 +126,12 @@ rule cluster_genes:
         cluster_fig = "clustering_genes/clustering.pdf"
     params:
         clustering = os.path.join(workflow.basedir, "tools", "clustering_wrapper.py"),
-        out_dir = "clustering_genes"
+        out_dir = "clustering_genes",
+        extendedVar = extendedVar
     log: "logs/cluster_genes.out"
     threads: 1
     conda: CONDA_SHARED_ENV
     shell:
         "{params.clustering} -o {params.out_dir} -s {input.mtx} -b {input.bc} -v {input.genes} \
-        --cells 5 --count 50 --genes 5 --dispersity 0.5 --normalize 1e4 -g {col_groups} -ci 0 -hv > {log} 2>&1"
+        --cells 1 --count 1 --genes 1 --dispersity 0.5 --normalize 1e4 -g {col_groups} \
+        -t genes -hv -ev {params.extendedVar} > {log} 2>&1"

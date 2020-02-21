@@ -195,6 +195,12 @@ def parse_args(defaults=None):
                          action="store_true",
                          help="generate only the index files for both normal run as well as for velocity run")
 
+    parser.add_argument("-ev", "--extendedVar",
+                          dest="extendedVar",
+                          required=False,
+                          help="tsv file containing additional information to load into AnnData var e.g. gene name, chromosome or biotype",
+                          default=None)
+
     parser.add_argument("-h", "--help",
                          action="help",
                          help="show this help message and exit")
