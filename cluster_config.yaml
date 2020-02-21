@@ -1,5 +1,6 @@
 ## cluster parameters
-cluster_cmd: 'qsub -V -cwd -j y -pe threaded {threads} -l h_vmem={cluster.memory},h_rt=24:00:00 -l tmpspace=100G -N {rule}.snakemake -S /bin/bash'
+cluster_cmd: 'sbatch --ntasks-per-node=1 -c {threads} -J {rule}.snakemake --mem-per-cpu={cluster.memory} -o {cluster_logDir}/{rule}.%j.out -e {cluster_logDir}/{rule}.%j.err' 
+#'qsub -V -cwd -j y -pe threaded {threads} -l h_vmem={cluster.memory},h_rt=24:00:00 -l tmpspace=100G -N {rule}.snakemake -S /bin/bash'
 latency_wait: 300
 cluster_logDir: cluster_logs
 __default__:
