@@ -136,18 +136,18 @@ def clustercells(adata, outdir, group_keys):
     fig2 = sc.pl.pca_variance_ratio(adata)
 
     # plot louvain on umap
-    sc.tl.umap(adata, min_dist=0.1, spread=0.5)
-    fig3 = sc.pl.umap(adata, color="louvain", return_fig=True)
+    sc.tl.umap(adata, min_dist=0.1, spread=5)
+    fig3 = sc.pl.umap(adata, color="louvain", return_fig=True, palette='tab20')
 
     # plot sample on umap
-    fig4 = sc.pl.umap(adata, color='sample', return_fig=True)
+    fig4 = sc.pl.umap(adata, color='sample', return_fig=True, palette='tab20')
 
     # plot also on groups if indicated
     if group_keys is not None:
         for key in group_keys:
             fig4 = sc.pl.pca(adata, color=key, return_fig=True)
-            sc.tl.umap(adata, min_dist=0.1, spread=0.5)
-            fig5 = sc.pl.umap(adata, color=key, return_fig=True)
+            sc.tl.umap(adata, min_dist=0.1, spread=5)
+            fig5 = sc.pl.umap(adata, color=key, return_fig=True, palette='tab20')
 
     # save barcode cluster tsv
     # if group_keys is None:
