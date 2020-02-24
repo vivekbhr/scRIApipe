@@ -23,48 +23,63 @@ ecList.unfiltered <- trimws(unlist(strsplit(ecList.unfiltered, ",", fixed = TRUE
 bclist <- trimws(unlist(strsplit(bclist, ",", fixed = TRUE)))
 samples <- trimws(unlist(strsplit(samples, ",", fixed = TRUE)))
 
-## merge barcodes
-bclist <- lapply(bclist, read.table, header = FALSE, stringsAsFactors = F)
-bclist <- lapply(seq_along(bclist), function(n) paste(samples[n], bclist[[n]]$V1, sep = "_"))
+## ---- if only one sample, just link the files, else merge them --- ##
 
+## -----------merge barcodes
+if(length(bclist) == 1) {
+  file.link(bclist, out_bc)
+} else {
+  bclist <- lapply(bclist, read.table, header = FALSE, stringsAsFactors = F)
+  bclist <- lapply(seq_along(bclist), function(n) paste(samples[n], bclist[[n]]$V1, sep = "_"))
+  write.table(unlist(bclist), file = out_bc, sep = "\n", row.names = F, col.names = F, quote = F)
+}
 
-## merge the EC map list based on the contained transcripts or ECs (depending on "mergeBy")
-eclist <- lapply(ecList.filtered, read.delim, header = FALSE,
-                 col.names = c("EC", "TxSet", "Gene"), stringsAsFactors = FALSE)
-
-## first subset the mtx for each sample based on it's own filtered ECs
-mtxlist <- lapply(seq_along(matrixFileList), function(n){
+## ------------  merge EC and mtx list
+if(length(matrixFileList) == 1 & length(ecList.filtered) == 1) {
+  file.link(matrixFileList, out_mtx)
+  file.link(ecList.filtered, out_ec)
+} else {
+  
+  ## merge the EC map list based on the contained transcripts or ECs (depending on "mergeBy")
+  eclist <- lapply(ecList.filtered, read.delim, header = FALSE,
+                   col.names = c("EC", "TxSet", "Gene"), stringsAsFactors = FALSE)
+  
+  ## first subset the mtx for each sample based on it's own filtered ECs
+  mtxlist <- lapply(seq_along(matrixFileList), function(n){
     ec_counts <- readMM(matrixFileList[n])
     ecIDs <- read.delim(ecList.unfiltered[n], header = F)$V1
     keptEC <- ecIDs %in% eclist[[n]]$EC
     outmtx <- ec_counts[, keptEC]
     colnames(outmtx) <- ecIDs[keptEC]
     return(outmtx)
-})
-
-  
-## then subset for ECs that match across samples (dropping ECs specific to only one sample)
-if(mergeBy == "EC") {
-  eclist.match <- na.omit(plyr::join_all(eclist, by = "EC", type = "inner"))
-  eclist2 <- eclist.match[1:3]
-  subset_mtxList <- lapply(seq_along(mtxlist), function(n){
-    mt <- mtxlist[[n]]
-    keptEC <- colnames(mt) %in% as.character(eclist.match$EC)
-    return(mt[, keptEC]) })
-
-} else {
-  eclist.match <- na.omit(plyr::join_all(eclist, by = "TxSet", type = "inner"))
-  eclist1 <- eclist.match[ , grepl("EC", colnames(eclist.match))]
-  eclist2 <- cbind(eclist.match[,c("Gene", "TxSet")], eclist1)
-  ## subset all matrices based on the merged EClist and merge them (keeps more ECs than the one above)
-  subset_mtxList <- lapply(seq_along(mtxlist), function(n){
-    mt <- mtxlist[[n]]
-    keptEC <- colnames(mt) %in% as.character(eclist1[, n])
-    return(mt[, keptEC])
   })
+  
+  
+  ## then subset for ECs that match across samples (dropping ECs specific to only one sample)
+  if(mergeBy == "EC") {
+    eclist.match <- na.omit(plyr::join_all(eclist, by = "EC", type = "inner"))
+    eclist2 <- eclist.match[1:3]
+    subset_mtxList <- lapply(seq_along(mtxlist), function(n){
+      mt <- mtxlist[[n]]
+      keptEC <- colnames(mt) %in% as.character(eclist.match$EC)
+      return(mt[, keptEC]) })
+    
+  } else {
+    eclist.match <- na.omit(plyr::join_all(eclist, by = "TxSet", type = "inner"))
+    eclist1 <- eclist.match[ , grepl("EC", colnames(eclist.match))]
+    eclist2 <- cbind(eclist.match[,c("Gene", "TxSet")], eclist1)
+    ## subset all matrices based on the merged EClist and merge them (keeps more ECs than the one above)
+    subset_mtxList <- lapply(seq_along(mtxlist), function(n){
+      mt <- mtxlist[[n]]
+      keptEC <- colnames(mt) %in% as.character(eclist1[, n])
+      return(mt[, keptEC])
+    })
+  }
+  
+  ## write outputs
+  writeMM(Reduce(rbind, subset_mtxList), file = out_mtx)
+  write.table(eclist2, file = out_ec, sep = "\t", row.names = F, col.names = F, quote = F)
+  
 }
 
-## write outputs
-writeMM(Reduce(rbind, subset_mtxList), file = out_mtx)
-write.table(eclist2, file = out_ec, sep = "\t", row.names = F, col.names = F, quote = F)
-write.table(unlist(bclist), file = out_bc, sep = "\n", row.names = F, col.names = F, quote = F)
+
