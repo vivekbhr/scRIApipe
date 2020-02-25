@@ -83,7 +83,7 @@ rule get_counts_txt:
         "transcripts_quant/{sample}/output.correct.sort.bus"
     output:
         "transcripts_quant/{sample}/output.correct.sort.txt"
-    log: "logs/get_counts.{sample}.out"
+    log: "logs/get_counts_txt_{sample}.out"
     threads: 1
     conda: CONDA_SHARED_ENV
     shell: "bustools text -o {output} {input} > {log}"

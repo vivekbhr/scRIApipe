@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 import matplotlib.backends.backend_pdf
 
 # load matrix as AnnData object
-def get_matrix(countFile, outdir, barcodes, varlist, groups, colIdx, extendedVar, type):
+def get_matrix(countFile, outdir, barcodes, varlist, groups, extendedVar, type):
     # load adata
     adata = sc.read_mtx(countFile)
 
@@ -34,17 +34,19 @@ def get_matrix(countFile, outdir, barcodes, varlist, groups, colIdx, extendedVar
     adata.obs.index = obs[0].values
     obs_new = obs[0].str.split("_", n=2, expand=True)
     n_col = obs_new.shape[1]
-    adata.obs['sample'] = obs_new.iloc[:, 0:n_col-1].apply(lambda x: '_'.join(x), axis=1).astype('category').values
-    adata.obs['barcode'] = obs_new[2].astype('category').values
+    if n_col > 1:
+        adata.obs['sample'] = obs_new.iloc[:, 0:n_col-1].apply(lambda x: '_'.join(x), axis=1).astype('category').values
+        adata.obs['barcode'] = obs_new[2].astype('category').values
 
     # set index
-    var = pd.read_csv(varlist, sep='\t', header=None, index_col=colIdx)
     if type == 'ECs':
+        var = pd.read_csv(varlist, sep='\t', header=None, index_col=2)
         var.index = var.index.astype('str').values
         var.drop([1,3], axis=1, inplace=True)
         var.columns = ['geneID']
         adata.var = var
     elif type == 'genes':
+        var = pd.read_csv(varlist, sep='\t', header=None, index_col=0)
         adata.var.index = var.index.values
 
     # extend variable df assumes same index
@@ -294,11 +296,6 @@ def main():
     if args.extendedVar == 'None':
         args.extendedVar = None
 
-    if args.type == 'genes':
-        colIdx = 0
-    elif args.type == 'ECs':
-        colIdx = 2
-
     print("parameters that were used:")
     print("clustering_wrapper: \n--outdir {} \n--sample {} \n--barcodes {} \n--varlist {} \
             \n--type {} \n--groups {} \n--cells {} \n--count {} \
@@ -309,7 +306,7 @@ def main():
     # get matrix
     print("\nget matrix")
     adata, group_keys = get_matrix(args.sample, outdir, args.barcodes, args.varlist,
-                                   args.col_groups, colIdx, args.extendedVar, args.type)
+                                   args.col_groups, args.extendedVar, args.type)
 
     print("\nstart preprocessing")
     adata = preprocess(adata, outdir, args.cells, args.genes,

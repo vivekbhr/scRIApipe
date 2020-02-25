@@ -1,16 +1,4 @@
 #!/bin/bash
-# input file:
-#     - $1 = input = "transcripts_quant/{sample}/output.correct.sort.txt"
-# output files:
-#     - $2 = mtx = "transcripts_quant/{sample}/eq_counts/output.mtx"
-#     - $3 = ec = "transcripts_quant/{sample}/eq_counts/output.ec.txt"
-#     - $4 = bc = "transcripts_quant/{sample}/eq_counts/output.barcodes.txt"
-# temp files:
-#     - $5 =  bc_index = temp("transcripts_quant/{sample}/eq_counts/bc_index.txt"),
-#     - $6 = ec_index = temp("transcripts_quant/{sample}/eq_counts/ec_index.txt"),
-#     - $7 = header = temp("transcripts_quant/{sample}/eq_counts/mtx_header.txt"),
-#     - $8 = tmp1 = temp("transcripts_quant/{sample}/eq_counts/tmp1.txt"),
-#     - $9 = tmp2 = temp("transcripts_quant/{sample}/eq_counts/tmp2.txt")
 
 # count unique RNA fragments based on unique combination of Barcode, UMI and EC
 awk -F "\t" 'BEGIN{OFS=FS} {print($1, $3)}' $1 | sort | uniq -c | \

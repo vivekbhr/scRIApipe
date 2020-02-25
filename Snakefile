@@ -94,7 +94,7 @@ def getIdx(idxOnly):
         expand("transcripts_quant/{sample}/output.correct.sort.bus", sample = samples),
         expand("transcripts_quant/{sample}/eq_counts/output.mtx", sample = samples),
         expand("transcripts_quant/{sample}/gene_counts/output.mtx", sample = samples),
-        #expand("transcripts_quant/{sample}/output.txt", sample = samples),
+        expand("transcripts_quant/{sample}/output.correct.sort.txt", sample = samples),
         expand("transcripts_quant/{sample}/eq_counts/ec-to-gene.txt", sample = samples),
         #"clustering_tcc/preprocessed.tsv",
         "clustering_tcc/cluster.mtx",
