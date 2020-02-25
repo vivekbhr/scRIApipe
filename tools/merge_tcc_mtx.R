@@ -26,18 +26,18 @@ samples <- trimws(unlist(strsplit(samples, ",", fixed = TRUE)))
 ## ---- if only one sample, just link the files, else merge them --- ##
 
 ## -----------merge barcodes
-if(length(bclist) == 1) {
-  file.link(bclist, out_bc)
-} else {
-  bclist <- lapply(bclist, read.table, header = FALSE, stringsAsFactors = F)
-  bclist <- lapply(seq_along(bclist), function(n) paste(samples[n], bclist[[n]]$V1, sep = "_"))
-  write.table(unlist(bclist), file = out_bc, sep = "\n", row.names = F, col.names = F, quote = F)
-}
+bclist <- lapply(bclist, read.table, header = FALSE, stringsAsFactors = F)
+bclist <- lapply(seq_along(bclist), function(n) paste(samples[n], bclist[[n]]$V1, sep = "_"))
+write.table(unlist(bclist), file = out_bc, sep = "\n", row.names = F, col.names = F, quote = F)
+
 
 ## ------------  merge EC and mtx list
 if(length(matrixFileList) == 1 & length(ecList.filtered) == 1) {
   file.link(matrixFileList, out_mtx)
-  file.link(ecList.filtered, out_ec)
+  ## reverse the colums (gene, tx, ec)
+  eclist <- read.delim(ecList.filtered, header = FALSE,
+            col.names = c("EC", "TxSet", "Gene"), stringsAsFactors = FALSE)
+  write.table(eclist[c("Gene", "TxSet", "EC")], file = out_ec, sep = "\t", row.names = F, col.names = F, quote = F)
 } else {
   
   ## merge the EC map list based on the contained transcripts or ECs (depending on "mergeBy")
