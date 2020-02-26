@@ -42,7 +42,11 @@ def get_matrix(countFile, outdir, barcodes, varlist, groups, extendedVar, type):
     if type == 'ECs':
         var = pd.read_csv(varlist, sep='\t', header=None, index_col=2)
         var.index = var.index.astype('str').values
-        var.drop([1,3], axis=1, inplace=True)
+        n_col = var.shape[1]
+        if n_col > 2:
+            var.drop([1]+list(range(3,n_col+1)), axis=1, inplace=True)
+        else:
+            var.drop([1], axis=1, inplace=True)
         var.columns = ['geneID']
         adata.var = var
     elif type == 'genes':
