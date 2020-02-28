@@ -68,12 +68,28 @@ def runVelocity():
         expand("velocity_quant/{sample}/output.correct.sort.bus", sample = samples),
         expand("velocity_quant/{sample}/spliced.bus", sample = samples),
         expand("velocity_quant/{sample}/unspliced.bus", sample = samples),
-        expand("velocity_quant/{sample}/spliced_counts/spliced.mtx", sample = samples),
-        expand("velocity_quant/{sample}/unspliced_counts/unspliced.mtx", sample = samples),
+        expand("velocity_quant/{sample}/spliced.txt", sample = samples),
+        expand("velocity_quant/{sample}/unspliced.txt", sample = samples),
+        expand("velocity_quant/{sample}/TCC_spliced/output.mtx", sample = samples),
+        expand("velocity_quant/{sample}/TCC_spliced/output.ec.txt", sample = samples),
+        expand("velocity_quant/{sample}/TCC_spliced/output.barcodes.txt", sample = samples),
+        expand("velocity_quant/{sample}/TCC_spliced/ec-to-gene.txt", sample = samples),
+        expand("velocity_quant/{sample}/TCC_unspliced/output.mtx", sample = samples),
+        expand("velocity_quant/{sample}/TCC_unspliced/output.ec.txt", sample = samples),
+        expand("velocity_quant/{sample}/TCC_unspliced/output.barcodes.txt", sample = samples),
+        expand("velocity_quant/{sample}/TCC_unspliced/ec-to-gene.txt", sample = samples),
+        expand("velocity_quant/{sample}/geneCounts_unspliced/output_isect.mtx", sample = samples),
+        expand("velocity_quant/{sample}/geneCounts_spliced/output_isect.mtx", sample = samples),
+        expand("velocity_quant/{sample}/geneCounts_spliced/output.genes_isect.txt", sample = samples),
+        expand("velocity_quant/{sample}/geneCounts_unspliced/output.genes_isect.txt", sample = samples),
+
+        # expand("velocity_quant/{sample}/spliced_counts/spliced.mtx", sample = samples),
+        # expand("velocity_quant/{sample}/unspliced_counts/unspliced.mtx", sample = samples),
         "velocity_output/anndata.loom",
         "velocity_output/anndata_filtered.loom",
         "velocity_output/qc-metrics.csv",
-        "velocity_output/velocity-grid_louvain.png"
+        "velocity_output/velocity-grid_louvain.png",
+        "velocity_output/velocity-grid_samples.png"
         ]
         return(file_list)
     else:
