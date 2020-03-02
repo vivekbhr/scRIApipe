@@ -88,8 +88,7 @@ def runVelocity():
         "velocity_output/anndata.loom",
         "velocity_output/anndata_filtered.loom",
         "velocity_output/qc-metrics.csv",
-        "velocity_output/velocity-grid_louvain.png",
-        "velocity_output/velocity-grid_samples.png"
+        "velocity_output/velocity-grid_louvain.png"
         ]
         return(file_list)
     else:
