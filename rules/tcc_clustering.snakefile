@@ -76,6 +76,7 @@ rule cluster_tcc:
         bc = "transcripts_quant/barcodes_merged.txt"
     output:
         #preprocessed = "clustering_tcc/preprocessed.tsv",
+        adata = "clustering_tcc/anndata_filtered.loom",
         cluster = "clustering_tcc/cluster.mtx",
         cl_bc = "clustering_tcc/barcode_cluster.tsv",
         cl_var = "clustering_tcc/var_cluster.tsv",
@@ -90,7 +91,7 @@ rule cluster_tcc:
     conda: CONDA_SHARED_ENV
     shell:
         "{params.clustering} -o {params.out_dir} -s {input.mtx} -b {input.bc} -v {input.ECmap} \
-        --cells 50 --count 1000 --genes 100 --normalize 1e4 -g {col_groups} \
+        --cells 5 --count 1000 --genes 100 --normalize 1e4 -g {col_groups} \
         -t ECs -hv -ev {params.extendedVar} > {log} 2>&1"
 
 rule merge_genes:
@@ -119,6 +120,7 @@ rule cluster_genes:
         genes = "transcripts_quant/genes_gene_merged.txt"
     output:
         #preprocessed = "clustering_genes/preprocessed.tsv",
+        adata = "clustering_genes/anndata_filtered.loom",
         cluster = "clustering_genes/cluster.mtx",
         cl_bc = "clustering_genes/barcode_cluster.tsv",
         cl_var = "clustering_genes/var_cluster.tsv",
@@ -133,5 +135,5 @@ rule cluster_genes:
     conda: CONDA_SHARED_ENV
     shell:
         "{params.clustering} -o {params.out_dir} -s {input.mtx} -b {input.bc} -v {input.genes} \
-        --cells 50 --count 1000 --genes 100 --dispersity 0.5 --normalize 1e4 -g {col_groups} \
+        --cells 5 --count 1000 --genes 100 --dispersity 0.5 --normalize 1e4 -g {col_groups} \
         -t genes -hv -ev {params.extendedVar} > {log} 2>&1"

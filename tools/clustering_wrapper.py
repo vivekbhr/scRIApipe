@@ -18,6 +18,7 @@ import pandas as pd
 import scanpy as sc
 import numpy as np
 import scipy.io
+import loompy
 
 # for plots
 import matplotlib
@@ -169,6 +170,9 @@ def clustercells(adata, outdir, group_keys):
     # store adata object
     scipy.io.mmwrite(outdir+"/cluster", adata.X)
     #adata.to_df().to_csv(outdir+"/cluster.tsv", sep='\t', header=True)
+
+    ## write the filtered anndata
+    adata.write_loom(outdir+"/anndata_filtered.loom", write_obsm_varm=True)
 
     # save figures and close pdf
     pdf.savefig(fig1)
