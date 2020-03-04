@@ -134,6 +134,7 @@ getGenes <- function(x, pos, eclist = bus_eclist, file = out) {
     apply(df, 1, function(x) {
       key <- as.integer(x[1])
       values <- unlist(strsplit(x[2], ","))
+      values <- as.integer(values) + 1
       genes <- unique(tx_ids[values, ]$gene_id)
       name <- ifelse(length(genes) != 1, NA, genes)
       return(name)
