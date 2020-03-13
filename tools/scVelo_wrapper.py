@@ -36,18 +36,18 @@ from sklearn.decomposition import PCA
 from scipy.spatial.distance import pdist, squareform
 scv.settings.set_figure_params('scvelo')
 
-def get_matrix(sampleName):
-    spliced_dir = "velocity_quant/"+sampleName+"/spliced_counts/"
-    unspliced_dir = "velocity_quant/"+sampleName+"/unspliced_counts/"
+def get_matrix(sampleName, spliced_dir, unspliced_dir, prefix):
+    spliced_dir = "velocity_quant/" + sampleName + "/" + spliced_dir + "/" #spliced_counts
+    unspliced_dir = "velocity_quant/" + sampleName + "/" + unspliced_dir + "/" #unspliced_counts
 
-    s = sc.read_mtx(spliced_dir + "spliced.mtx")
-    u = sc.read_mtx(unspliced_dir + "unspliced.mtx")
+    s = sc.read_mtx(spliced_dir + prefix + "_isect.mtx")
+    u = sc.read_mtx(unspliced_dir + prefix + "_isect.mtx")
 
-    s_bcs = pd.read_csv(spliced_dir + "spliced.barcodes.txt", header=None)
-    u_bcs = pd.read_csv(unspliced_dir + "unspliced.barcodes.txt", header=None)
+    s_bcs = pd.read_csv(spliced_dir + prefix + ".barcodes.txt", header=None)
+    u_bcs = pd.read_csv(unspliced_dir + prefix + ".barcodes.txt", header=None)
 
-    s_genes = pd.read_csv(spliced_dir + "spliced.genes.txt", header=None)
-    u_genes = pd.read_csv(unspliced_dir + "unspliced.genes.txt", header=None)
+    s_genes = pd.read_csv(spliced_dir + prefix + ".genes_isect.txt", header=None)
+    u_genes = pd.read_csv(unspliced_dir + prefix + ".genes_isect.txt", header=None)
 
     s.obs.index = s_bcs[0].values
     u.obs.index = u_bcs[0].values
@@ -140,7 +140,7 @@ def parse_args(defaults=None):
                          metavar="INT",
                          help="minimum number of cells required to keep the gene (default: '%(default)s')",
                          type=int,
-                         default=3)
+                         default=10)
 
     parser.add_argument("-sb", "--samplesAsBatches",
                          dest="samples_as_batches",
@@ -177,39 +177,42 @@ def main():
 
     ## prepare matrices
     print("Preparing matrices")
-    quant = [get_matrix(x) for x in args.samples]
-    s = scp.sparse.vstack([sample['s'].X for sample in quant])#pl1['s'].X, pl3['s'].X, pl4['s'].X, pl5['s'].X]
-    u = scp.sparse.vstack([sample['u'].X for sample in quant])#pl1['u'].X, pl3['u'].X, pl4['u'].X, pl5['u'].X
-    s_bcs = pd.concat([sample['s_bcs'] for sample in quant],ignore_index=False)
-    u_bcs = pd.concat([sample['u_bcs'] for sample in quant],ignore_index=False)
+    quant = [get_matrix(x, 'geneCounts_spliced', 'geneCounts_unspliced', 'output') for x in args.samples]
+    # merge samples based on geneIDs
+    s = quant[0]['s'].concatenate([sample['s'] for sample in quant[1:]], join = 'inner',
+                              batch_key= 'sample', batch_categories=args.samples)
+    u = quant[0]['u'].concatenate([sample['u'] for sample in quant[1:]], join = 'inner',
+                              batch_key= 'sample', batch_categories=args.samples)
+    #s_bcs = pd.concat([sample['s_bcs'] for sample in quant],ignore_index=False)
+    #u_bcs = pd.concat([sample['u_bcs'] for sample in quant],ignore_index=False)
 
     ## get common indicies bw spliced and unspliced
-    intersect = u_bcs.index.intersection(s_bcs.index)
-    u_bcs = u_bcs.loc[intersect]
-    s_bcs = s_bcs.loc[intersect]
-    u = u[u_bcs.index.get_indexer_for(intersect)]
-    s = s[s_bcs.index.get_indexer_for(intersect)]
+    #intersect = u_bcs.index.intersection(s_bcs.index)
+    #u_bcs = u_bcs.loc[intersect]
+    #s_bcs = s_bcs.loc[intersect]
+    #u = u[u_bcs.index.get_indexer_for(intersect)]
+    #s = s[s_bcs.index.get_indexer_for(intersect)]
 
     ## make anndata
     print("Making anndata object")
-    genes = quant[0]['genes']
-    genes.columns=["gid"]
-    sadata = anndata.AnnData(X=s, obs=s_bcs, var=genes)
-    uadata = anndata.AnnData(X=u, obs=u_bcs, var=genes)
+    #genes = quant[0]['genes']
+    #genes.columns=["gid"]
+    #sadata = anndata.AnnData(X=s, obs=s_bcs, var=genes)
+    #uadata = anndata.AnnData(X=u, obs=u_bcs, var=genes)
 
-    adata = sadata.copy()
-    adata.layers["spliced"] = sadata.X
-    adata.layers["unspliced"] = uadata.X
+    adata = s.copy()
+    adata.layers["spliced"] = s.X
+    adata.layers["unspliced"] = u.X
     adata.layers["ambiguous"] = scp.sparse.csr_matrix(np.zeros(adata.X.shape))
-    adata.obs = sadata.obs
-    adata.var.index = sadata.var.gid
+    adata.obs = s.obs
 
     ## add gene names (from t2g)
-    t2g = pd.read_csv(args.tr2gene_file, header=None, sep="\t", names=["tid", "gid", "gene"], index_col=False)
-    t2g = t2g.drop_duplicates(["gid", "gene"])
-    t2g = t2g.set_index("gid")
-    adata.var["Gene"] = adata.var.index.map(t2g["gene"])
-    adata.var["Transcript"] = adata.var.index.map(t2g["tid"])
+    #t2g = pd.read_csv(args.tr2gene_file, header=None, sep="\t", names=["tid", "gid", "gene"], index_col=False)
+    #t2g = t2g.drop_duplicates(["gid", "gene"])
+    #t2g = t2g.set_index("gid")
+    #adata.var["Gene"] = adata.var.index.map(t2g["gene"])
+    #adata.var["Transcript"] = adata.var.index.map(t2g["tid"])
+
     ## show spliced/unspliced props
     scv.pp.show_proportions(adata)
 
@@ -251,13 +254,13 @@ def main():
 
     ## then, velocyto filter
     print("Velocity filtering")
-    scv.pp.filter_and_normalize(adata, min_shared_counts=5, n_top_genes=5000)
+    scv.pp.filter_and_normalize(adata, min_shared_counts=20, n_top_genes=5000)
     print("Cells left: {}".format(len(adata.obs.index)))
     print("Genes left: {}".format(len(adata.var_names)))
     ## plot
-    sc.pp.neighbors(adata, use_rep='X')
+    sc.pp.neighbors(adata, n_pcs=30)
     sc.tl.louvain(adata)
-    sc.tl.umap(adata)
+    sc.tl.umap(adata, min_dist=0.1, spread=4)
     fig = sc.pl.umap(adata, color=['louvain', 'sample'], return_fig=True)
     fig.savefig(outdir+"/allsamples_UMAP.png")
 

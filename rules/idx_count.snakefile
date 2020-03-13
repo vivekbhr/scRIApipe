@@ -9,7 +9,8 @@ rule create_whitelist:
 rule prep_annotation:
     input: input_gtf
     output:
-        fa = "annotations/cDNA_introns.fa",
+        velocity_fa = "annotations/cDNA_introns.fa",
+        cDNA_fa = "annotations/cDNA.fa",
         cdna = "annotations/cDNA_tx_to_capture.txt",
         introns = "annotations/introns_tx_to_capture.txt",
         tr2g = "annotations/tr2g.tsv",
@@ -17,20 +18,18 @@ rule prep_annotation:
     params:
         genome = genome_id,
         readLength = read_length,
-        script=os.path.join(workflow.basedir, "tools", "velocyto_indexing.R"),
+        script=os.path.join(workflow.basedir, "tools", "prep_annotation.R"),
         outdir = "annotations"
     log:
         out = "logs/prep_annotation.out",
         err = "logs/prep_annotation.err"
     threads: 2
-    conda: CONDA_SHARED_ENV
+    conda: CONDA_BUS_ENV
     shell: "{params.script} {params.genome} {input} {params.readLength} {params.outdir} > {log.out} 2> {log.err}"
 
 rule transcript_index:
-    input: cdna_fasta
-    output: "annotations/cDNA.all.idx"
-#    params:
-#        kallisto = os.path.join(workflow.basedir, "tools", "kallisto")
+    input: "annotations/cDNA.fa"
+    output: "annotations/cDNA.idx"
     log:
         out = "logs/transcript_index.out",
         err = "logs/transcript_index.err"
@@ -42,7 +41,7 @@ rule transcript_map:
     input:
         R1 = "FASTQ_trimmed/{sample}"+reads[0]+".fastq.gz" if trim else "FASTQ/{sample}"+reads[0]+".fastq.gz",
         R2 = "FASTQ_trimmed/{sample}"+reads[1]+".fastq.gz" if trim else "FASTQ/{sample}"+reads[1]+".fastq.gz",
-        idx = "annotations/cDNA.all.idx"
+        idx = "annotations/cDNA.idx"
     output:
         bus = "transcripts_quant/{sample}/output.bus",
         matrix = "transcripts_quant/{sample}/matrix.ec",
@@ -78,40 +77,7 @@ rule correct_sort:
         rm {params.outdir}/output.correct.bus
         """
 
-rule get_tcc:
-    input:
-        t2g = "annotations/tr2g.tsv",
-        mtx = "transcripts_quant/{sample}/matrix.ec",
-        transcripts = "transcripts_quant/{sample}/transcripts.txt",
-        busfile = "transcripts_quant/{sample}/output.correct.sort.bus"
-    output:
-         mtx = "transcripts_quant/{sample}/eq_counts/output.mtx",
-         txt = "transcripts_quant/{sample}/eq_counts/output.ec.txt",
-         bc = "transcripts_quant/{sample}/eq_counts/output.barcodes.txt"
-    params:
-        out = "transcripts_quant/{sample}/eq_counts/",
-        bustools = os.path.join(workflow.basedir, "tools", "bustools")
-    log: "logs/get_tcc_{sample}.out"
-    threads: 1
-    conda: CONDA_SHARED_ENV
-    shell:  "{params.bustools} count -o {params.out} -g {input.t2g} -e {input.mtx} -t {input.transcripts} {input.busfile} > {log} 2>&1"
-
-rule get_geneCounts:
-    input:
-        t2g = "annotations/tr2g.tsv",
-        mtx = "transcripts_quant/{sample}/matrix.ec",
-        transcripts = "transcripts_quant/{sample}/transcripts.txt",
-        busfile = "transcripts_quant/{sample}/output.correct.sort.bus"
-    output:
-         mtx = "transcripts_quant/{sample}/gene_counts/output.mtx"
-    params:
-        out = "transcripts_quant/{sample}/gene_counts/",
-        bustools = os.path.join(workflow.basedir, "tools", "bustools")
-    log: "logs/get_geneCounts.{sample}.out"
-    threads: 1
-    conda: CONDA_SHARED_ENV
-    shell:  "{params.bustools} count --genecounts -o {params.out} -g {input.t2g} -e {input.mtx} -t {input.transcripts} {input.busfile} > {log} 2>&1"
-
+## instead of counting using bustools. I count using the text files myself
 rule get_counts_txt:
     input:
         "transcripts_quant/{sample}/output.correct.sort.bus"
@@ -121,3 +87,47 @@ rule get_counts_txt:
     threads: 1
     conda: CONDA_SHARED_ENV
     shell: "bustools text -o {output} {input} > {log}"
+
+## this rule gets TCCs and also creates EC to gene map
+## NOTE: the TCC matrix output is not filtered for multi-genic ECs, but the
+## ECtoGene map is, the rule "merge TCCs" would filter all samples for the multigenic
+## ECs before merging
+rule get_tcc:
+    input:
+        tr2g = "annotations/tr2g.tsv",
+        ecToTr = "transcripts_quant/{sample}/matrix.ec",
+        transcripts = "transcripts_quant/{sample}/transcripts.txt",
+        busfile = "transcripts_quant/{sample}/output.txt"
+    output:
+         mtx = "transcripts_quant/{sample}/eq_counts/output.mtx",
+         ec = "transcripts_quant/{sample}/eq_counts/output.ec.txt",
+         bc = "transcripts_quant/{sample}/eq_counts/output.barcodes.txt",
+         ecToGene = "transcripts_quant/{sample}/eq_counts/ec-to-gene.txt"
+    params:
+        out = "transcripts_quant/{sample}/eq_counts/",
+        rscript = os.path.join(workflow.basedir, "tools", "get_ec_geneMap.R")
+    log: "logs/get_tcc_{sample}.out"
+    threads: 1
+    conda: CONDA_SHARED_ENV
+    shell:
+    #"{params.bustools} count -o {params.out} -g {input.t2g} -e {input.mtx} -t {input.transcripts} {input.busfile} > {log} 2>&1"
+        "Rscript {params.rscript} {input.tr2g} {input.busfile} {input.transcripts} {input.ecToTr} {params.out} 2> {log} 2>&1"
+
+rule get_geneCounts:
+    input:
+        ecToGene = "transcripts_quant/{sample}/eq_counts/ec-to-gene.txt",
+        mtx = "transcripts_quant/{sample}/eq_counts/output.mtx",
+        ec = "transcripts_quant/{sample}/eq_counts/output.ec.txt",
+        bc = "transcripts_quant/{sample}/eq_counts/output.barcodes.txt"
+    output:
+         mtx = "transcripts_quant/{sample}/gene_counts/output.mtx",
+         bc = "transcripts_quant/{sample}/gene_counts/output.barcodes.txt",
+         genes = "transcripts_quant/{sample}/gene_counts/output.genes.txt"
+    params:
+        out = "transcripts_quant/{sample}/gene_counts/",
+        rscript = os.path.join(workflow.basedir, "tools", "get_geneCounts.R")
+    log: "logs/get_geneCounts.{sample}.out"
+    threads: 1
+    conda: CONDA_SHARED_ENV
+    shell:  #"{params.bustools} count --genecounts -o {params.out} -g {input.t2g} -e {input.mtx} -t {input.transcripts} {input.busfile} > {log} 2>&1"
+        "Rscript {params.rscript} {input.ecToGene} {input.mtx} {input.ec} {input.bc} {params.out} > {log} 2>&1"

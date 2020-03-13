@@ -12,7 +12,8 @@ def load_configfile(configfile):
    return(config)
 
 def set_condaEnv():
-    return{'CONDA_SHARED_ENV': 'env.yaml'}
+    return{'CONDA_SHARED_ENV': 'env.yaml',
+            'CONDA_BUS_ENV' : 'bus_env.yaml'}
 
 def get_sample_names(infiles, ext, reads):
     """
@@ -71,8 +72,8 @@ def runVelocity():
     expand("velocity_quant/{sample}/output.correct.sort.bus", sample = samples),
     expand("velocity_quant/{sample}/spliced.bus", sample = samples),
     expand("velocity_quant/{sample}/unspliced.bus", sample = samples),
-    expand("velocity_quant/{sample}/spliced_counts/spliced.mtx", sample = samples),
-    expand("velocity_quant/{sample}/unspliced_counts/unspliced.mtx", sample = samples),
+    expand("velocity_quant/{sample}/geneCounts_spliced/output.mtx", sample = samples),
+    expand("velocity_quant/{sample}/geneCounts_unspliced/output.mtx", sample = samples),
     "velocity_output/anndata.loom",
     "velocity_output/anndata_filtered.loom",
     "velocity_output/qc-metrics.csv",
@@ -91,13 +92,13 @@ rule all:
         expand("FASTQ/FastQC/{sample}{read}_fastqc.html", sample = samples, read=reads),
         "annotations/cDNA_tx_to_capture.txt",
         "annotations/tr2g.tsv",
-        "annotations/gtf.txdb",
-        "annotations/cDNA.all.idx",
+        #"annotations/gtf.txdb",
+        "annotations/cDNA.idx",
         expand("transcripts_quant/{sample}/output.correct.sort.bus", sample = samples),
         expand("transcripts_quant/{sample}/eq_counts/output.mtx", sample = samples),
         expand("transcripts_quant/{sample}/gene_counts/output.mtx", sample = samples),
         expand("transcripts_quant/{sample}/output.txt", sample = samples),
-        expand("transcripts_quant/{sample}/eq_counts/ECtoGene_map.txt", sample = samples),
+        expand("transcripts_quant/{sample}/eq_counts/ec-to-gene.txt", sample = samples),
         "transcripts_quant/TCCs_filtered_merged.mtx",
         "transcripts_quant/ECs_filtered_merged.txt",
         "transcripts_quant/barcodes_merged.txt",

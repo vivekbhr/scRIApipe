@@ -8,7 +8,7 @@ downsample:
 ## Trim the reads? (must-do for raw VASA-seq)
 trim: False
 ## options for cutadapt
-trimmerOptions: "-b W{'10'} -B W{'10'}"
+trimmerOptions: "-A W{'10'}"
 ## UCSC ID of the genome (used to fetch tx sequences)
 genome_id: 'mm10'
 ## TSV of the barcodes (tsv file with col1 = some id, and col2 = barcode sequence)
@@ -16,7 +16,7 @@ barcode_tsv: '/hpc/hub_oudenaarden/vbhardwaj/annotations/celseq2_barcodes.csv'
 ## GTF file (most important, better filter for pseudogenes etc first)
 input_gtf: '/hpc/hub_oudenaarden/group_references/ensembl/95/mus_musculus/annotations.gtf'
 ## a GENCODE formatted fasta file for transcripts, this file is used to get the gene symbols etc
-cdna_fasta: 'Mus_musculus.GRCm38.cdna.all.fa'
+#cdna_fasta: 'Mus_musculus.GRCm38.cdna.all.fa'
 ## protocol name
 protocol:
 ## read length (for kallisto index)
