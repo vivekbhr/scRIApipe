@@ -21,5 +21,3 @@ input_gtf: '/hpc/hub_oudenaarden/group_references/ensembl/95/mus_musculus/annota
 protocol:
 ## read length (for kallisto index)
 read_length:
-# provide file with cluster_ID(s); color clusters on these group(s)
-col_groups:

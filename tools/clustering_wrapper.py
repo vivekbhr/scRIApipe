@@ -13,12 +13,13 @@ import os
 import sys
 import textwrap
 
-# for clustering
+# for clustering and pp
 import pandas as pd
 import scanpy as sc
 import numpy as np
 import scipy.io
 import loompy
+import math
 
 # for plots
 import matplotlib
@@ -77,52 +78,60 @@ def get_matrix(countFile, outdir, barcodes, varlist, groups, extendedVar, type):
     return(adata, group_keys)
 
 # preprocess tcc/gene matrix
-# preprocess tcc/gene matrix
-def preprocess(adata, outdir, mcells, mgenes, mcounts, md, ntotal, highlyvar):
+def preprocess(adata, outdir,  highlyvar):
     # open pdf file for plots
     pdf = matplotlib.backends.backend_pdf.PdfPages(outdir+"/preprocessed.pdf")
     plt.figure(figsize=(10,5))
 
-    # basic filtering
-    sc.pp.filter_cells(adata, min_genes= mgenes)
-    sc.pp.filter_cells(adata, min_counts= mcounts)
-    sc.pp.filter_genes(adata, min_cells = mcells)
-    print("\nAfter basic filtering:")
-    print(adata)
+    # make figure for basic filtering
+    qc = sc.pp.calculate_qc_metrics(adata)
+
+    # plot total counts per cell histogram
+    fig_counts_cell = plt.figure(figsize=(10,5))
+    fig_counts_cell = qc[0]['total_counts'].plot(kind='hist', logy=True, logx=True, bins=200, title='total counts per cell').get_figure()
+    print('\nMedian counts per cell: {}'.format(qc[0]['total_counts'].sort_values(ascending=False).median()))
+    print('\nAdata before filtering cells:\n{}'.format(adata))
+    sc.pp.filter_cells(adata, min_genes= 100)
+    sc.pp.filter_cells(adata, min_counts= 1000)
+    print('\nAdata after filtering cells:\n{}'.format(adata))
+    pdf.savefig(fig_counts_cell)
+
+    # plot counts per gene
+    fig_counts_gene = plt.figure(figsize=(10,5))
+    fig_counts_gene = qc[1]['total_counts'].sort_values(ascending=False).plot(kind='line', logy=True, title='total counts per gene').get_figure()
+    print('\nMedian counts per gene: {}'.format(qc[1]['total_counts'].sort_values(ascending=False).median()))
+    print('\nAdata before filtering genes:\n{}'.format(adata))
+    sc.pp.filter_genes(adata, min_cells = 3)
+    # sc.pp.filter_genes(adata, min_counts = 6)
+    print('\nAdata after filtering genes:\n{}'.format(adata))
+    pdf.savefig(fig_counts_gene)
 
     # plot to see count distribution and gene distrubution
     fig1 = sc.pl.violin(adata, 'n_counts', jitter=0.4, return_fig=True)
     fig2 = sc.pl.violin(adata, 'n_genes', jitter=0.4, return_fig=True)
 
     # normalize and log transform (should we use normalize per cell?)
+    qc = sc.pp.calculate_qc_metrics(adata)
+    adata.obs['n_counts'] = adata.X.sum(axis=1).A1
+    ntotal = math.ceil(np.quantile(qc[0]['total_counts'].values, .10)/100)*100 #round 90th quantile up to the nearest 100
     sc.pp.normalize_total(adata, target_sum = ntotal,
-                          exclude_highly_expressed = True)
+                          exclude_highly_expressed = True,
+                          inplace = True)
     sc.pp.log1p(adata)
 
     if highlyvar == True:
         # set raw data before highly variable genes selection
         adata.raw = adata
-
-        # look at highly variable genes/ec
-        # sc.pp.highly_variable_genes(adata, min_mean=0.25, max_mean=6,
-        #                             min_disp=0.5, inplace=True)
-        # sc.pl.highly_variable_genes(adata, save=outdir+'/highly_variable_genes.pdf')
-        #actually filter for highly variable genes/ec
-        sc.pp.highly_variable_genes(adata, min_mean=0.25, max_mean=6,
-                                    min_disp=md, inplace=True, subset=True)
-
+        sc.pp.highly_variable_genes(adata, n_top_genes=5000, inplace=True, subset=True)
+        sc.pp.regress_out(adata, ['n_counts'])
+        sc.pp.scale(adata, max_value=10)
         print("\nAfter selection highly variable genes/TCCs:")
         print(adata)
-
-    # store adata object
-    #scipy.io.mmwrite(outdir+"/preprocessed", adata.X)
-    #adata.to_df().to_csv(outdir+"/preprocessed.tsv", sep='\t', header=True)
 
     # save figures close pdf file
     pdf.savefig(fig1)
     pdf.savefig(fig2)
-    # if highlyvar == True:
-    #     pdf.savefig(fig3)
+
     pdf.close()
 
     return(adata)
@@ -245,41 +254,6 @@ def parse_args(defaults=None):
                           help="tsv file containing additional information to load into AnnData var e.g. gene name, chromosome or biotype",
                           default=None)
 
-    parser.add_argument("--cells",
-                         dest="cells",
-                         required=False,
-                         help="minimum number cells containing gene/TCC - used in filtering",
-                         default=5,
-                         type=int)
-
-    parser.add_argument("--count",
-                         dest="count",
-                         required=False,
-                         help="minimum number of counts per cell - used in filtering",
-                         default=20,
-                         type=int)
-
-    parser.add_argument("--genes",
-                         dest="genes",
-                         required=False,
-                         help="minimum number of genes/TCCs per cell - used in filtering",
-                         default=100,
-                         type=int)
-
-    parser.add_argument("--dispersity",
-                         dest="dispersity",
-                         required=False,
-                         help="minimum amount of dispersity - used in filtering",
-                         default=0.5,
-                         type=float)
-
-    parser.add_argument("--normalize",
-                        dest="normalize",
-                        required=False,
-                        help="normalize cell reads to indicated amount",
-                        default=1e6,
-                        type=float)
-
     parser.add_argument("-hv", "--highly-variable",
                          dest="highlyvar",
                          action = 'store_true',
@@ -306,10 +280,8 @@ def main():
 
     print("parameters that were used:")
     print("clustering_wrapper: \n--outdir {} \n--sample {} \n--barcodes {} \n--varlist {} \
-            \n--type {} \n--groups {} \n--cells {} \n--count {} \
-            \n--genes {} \n--dispersity {} \n--normalize {} \n--highly-variable {}".format(args.outdir,
-            args.sample, args.barcodes, args.varlist, args.type, args.col_groups,
-            args.cells, args.count, args.genes, args.dispersity, args.normalize, args.highlyvar))
+            \n--type {} \n--highly-variable {}".format(args.outdir,
+            args.sample, args.barcodes, args.varlist, args.type, args.highlyvar))
 
     # get matrix
     print("\nget matrix")
@@ -317,51 +289,10 @@ def main():
                                    args.col_groups, args.extendedVar, args.type)
 
     print("\nstart preprocessing")
-    adata = preprocess(adata, outdir, args.cells, args.genes,
-                                      args.count, args.dispersity,
-                                      args.normalize, args.highlyvar)
+    adata = preprocess(adata, outdir, args.highlyvar)
     #print(adata.X)
     print("\nstart clustering")
     barcode_cluster = clustercells(adata, outdir, group_keys)
 
 if __name__ == "__main__":
     main()
-
-
-# def diff_expression_ec():
-#
-#     return()
-
-# def diff_expression_gene(adata, outdir, groups, n_top_genes):
-#     # open pdf file for plots
-#     pdf = matplotlib.backends.backend_pdf.PdfPages(outdir+"/diff_expression_gene")
-#
-#     # use wilcoxon instead of t-test
-#     sc.tl.rank_genes_groups(adata, 'louvain', method='wilcoxon')
-#     fig1 = sc.pl.rank_genes_groups(adata, n_genes=n_top_genes, sharey=False, return_fig=True)
-#
-#     # do logistic regression analyses mostly usefull for datasets with large cell populations
-#     sc.tl.rank_genes_groups(adata, 'louvain', method='logreg')
-#     fig2 = sc.pl.rank_genes_groups(adata, n_genes=n_top_genes, sharey=False, return_fig=True)
-#
-#     # save figures
-#     pdf.savefig(fig1.get_figure())
-#     pdf.savefig(fig2.get_figure())
-#
-#     if groups is not None:
-#         # use wilcoxon instead of t-test
-#         sc.tl.rank_genes_groups(adata, groups, method='wilcoxon')
-#         fig3 = sc.pl.rank_genes_groups(adata, n_genes=n_top_genes, sharey=False, return_fig=True)
-#
-#         # do logistic regression analyses mostly usefull for datasets with large cell populations
-#         sc.tl.rank_genes_groups(adata, groups, method='logreg')
-#         fig4 = sc.pl.rank_genes_groups(adata, n_genes=n_top_genes, sharey=False, return_fig=True)
-#
-#         # save figures
-#         pdf.savefig(fig3.get_figure())
-#         pdf.savefig(fig4.get_figure())
-#
-#     # close pdf
-#     pdf.close()
-#
-#     return()
