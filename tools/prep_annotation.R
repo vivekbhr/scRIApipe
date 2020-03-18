@@ -6,10 +6,6 @@ gtf <- Args[2]
 readLength <- as.numeric(Args[3])
 outdir <- Args[4]
 
-if (!require(BUSpaRse)) {
-  devtools::install_github("BUStools/BUSpaRse", dep = FALSE)
-}
-
 ## load appropriate bsgenome
 message("Loading genome")
 avail_genomes <- BSgenome::available.genomes()

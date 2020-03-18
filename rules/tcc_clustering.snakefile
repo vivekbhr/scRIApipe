@@ -68,3 +68,70 @@ rule merge_TCCs:
     shell:
         "Rscript {params.rscript} {params.mtxList} {params.ecToGeneList} {params.ecList} {params.bcList} {params.samples} {params.mergeBy} \
          {output.mtx} {output.ECmap} {output.bc} 2> {log} 2>&1"
+
+rule cluster_tcc:
+    input:
+        mtx = "transcripts_quant/TCCs_filtered_merged.mtx",
+        ECmap = "transcripts_quant/ECs_filtered_merged.txt",
+        bc = "transcripts_quant/barcodes_merged.txt"
+    output:
+        #preprocessed = "clustering_tcc/preprocessed.tsv",
+        adata = "clustering_tcc/anndata_filtered.loom",
+        cluster = "clustering_tcc/cluster.mtx",
+        cl_bc = "clustering_tcc/barcode_cluster.tsv",
+        cl_var = "clustering_tcc/var_cluster.tsv",
+        preprocessed_fig = "clustering_tcc/preprocessed.pdf",
+        cluster_fig = "clustering_tcc/clustering.pdf"
+    params:
+        clustering = os.path.join(workflow.basedir, "tools", "clustering_wrapper.py"),
+        out_dir = "clustering_tcc",
+        extendedVar = extendedVar
+    log: "logs/cluster_tcc.out"
+    threads: 1
+    conda: CONDA_SHARED_ENV
+    shell:
+        "{params.clustering} -o {params.out_dir} -s {input.mtx} -b {input.bc} -v {input.ECmap} \
+        -t ECs -hv -ev {params.extendedVar} > {log} 2>&1"
+
+rule merge_genes:
+    input:
+        mtx = expand("transcripts_quant/{sample}/gene_counts/output.mtx", sample = samples),
+        barcodes = expand("transcripts_quant/{sample}/gene_counts/output.barcodes.txt", sample = samples),
+        genes = expand("transcripts_quant/{sample}/gene_counts/output.genes.txt", sample = samples)
+    output:
+        merged_mtx = "transcripts_quant/gene_merged.mtx",
+        merged_bc = "transcripts_quant/barcodes_gene_merged.txt",
+        merged_genes = "transcripts_quant/genes_gene_merged.txt"
+    params:
+        pyscript = os.path.join(workflow.basedir, "tools", "merge_genes_wrapper.py"),
+        out_dir =  "transcripts_quant/",
+        samples = ",".join(expand("{sample}", sample = samples))
+    log: "logs/merge_genes.out"
+    threads: 1
+    conda: CONDA_SHARED_ENV
+    shell:
+        "{params.pyscript} -s {params.samples} -o {params.out_dir} > {log} 2>&1"
+
+rule cluster_genes:
+    input:
+        mtx = "transcripts_quant/gene_merged.mtx",
+        bc = "transcripts_quant/barcodes_gene_merged.txt",
+        genes = "transcripts_quant/genes_gene_merged.txt"
+    output:
+        #preprocessed = "clustering_genes/preprocessed.tsv",
+        adata = "clustering_genes/anndata_filtered.loom",
+        cluster = "clustering_genes/cluster.mtx",
+        cl_bc = "clustering_genes/barcode_cluster.tsv",
+        cl_var = "clustering_genes/var_cluster.tsv",
+        preprocessed_fig = "clustering_genes/preprocessed.pdf",
+        cluster_fig = "clustering_genes/clustering.pdf"
+    params:
+        clustering = os.path.join(workflow.basedir, "tools", "clustering_wrapper.py"),
+        out_dir = "clustering_genes",
+        extendedVar = extendedVar
+    log: "logs/cluster_genes.out"
+    threads: 1
+    conda: CONDA_SHARED_ENV
+    shell:
+        "{params.clustering} -o {params.out_dir} -s {input.mtx} -b {input.bc} -v {input.genes} \
+         -t genes -hv -ev {params.extendedVar} > {log} 2>&1"
