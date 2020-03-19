@@ -73,8 +73,8 @@ def merge_files(samples, out_dir):
 
     # store result
     scipy.io.mmwrite(out_dir +'gene_merged', con_adata.X.astype(int))
-    con_adata.obs.drop('batch', axis=1).to_csv(out_dir + 'barcodes_gene_merged.txt', header=None)
-    con_adata.var.to_csv(out_dir + 'genes_gene_merged.txt', header=None)
+    con_adata.obs.drop('batch', axis=1).to_csv(out_dir + 'gene_merged.barcodes.txt', header=None)
+    con_adata.var.to_csv(out_dir + 'gene_merged.genes.txt', header=None)
 
 def main():
     print("parsing arguments")

@@ -71,24 +71,10 @@ def runVelocity():
         expand("velocity_quant/{sample}/spliced.txt", sample = samples),
         expand("velocity_quant/{sample}/unspliced.txt", sample = samples),
         expand("velocity_quant/{sample}/TCC_spliced/output.mtx", sample = samples),
-        expand("velocity_quant/{sample}/TCC_spliced/output.ec.txt", sample = samples),
-        expand("velocity_quant/{sample}/TCC_spliced/output.barcodes.txt", sample = samples),
         expand("velocity_quant/{sample}/TCC_spliced/ec-to-gene.txt", sample = samples),
         expand("velocity_quant/{sample}/TCC_unspliced/output.mtx", sample = samples),
-        expand("velocity_quant/{sample}/TCC_unspliced/output.ec.txt", sample = samples),
-        expand("velocity_quant/{sample}/TCC_unspliced/output.barcodes.txt", sample = samples),
         expand("velocity_quant/{sample}/TCC_unspliced/ec-to-gene.txt", sample = samples),
-        expand("velocity_quant/{sample}/geneCounts_unspliced/output_isect.mtx", sample = samples),
-        expand("velocity_quant/{sample}/geneCounts_spliced/output_isect.mtx", sample = samples),
-        expand("velocity_quant/{sample}/geneCounts_spliced/output.genes_isect.txt", sample = samples),
-        expand("velocity_quant/{sample}/geneCounts_unspliced/output.genes_isect.txt", sample = samples),
-
-        # expand("velocity_quant/{sample}/spliced_counts/spliced.mtx", sample = samples),
-        # expand("velocity_quant/{sample}/unspliced_counts/unspliced.mtx", sample = samples),
-        "velocity_output/anndata.loom",
-        "velocity_output/anndata_filtered.loom",
-        "velocity_output/qc-metrics.csv",
-        "velocity_output/velocity-grid_louvain.png"
+        "velocity_output/anndata.loom"
         ]
         return(file_list)
     else:
@@ -111,23 +97,10 @@ def getIdx(idxOnly):
         expand("transcripts_quant/{sample}/gene_counts/output.mtx", sample = samples),
         expand("transcripts_quant/{sample}/output.correct.sort.txt", sample = samples),
         expand("transcripts_quant/{sample}/eq_counts/ec-to-gene.txt", sample = samples),
-        #"clustering_tcc/preprocessed.tsv",
-        "clustering_tcc/anndata_filtered.loom",
-        "clustering_tcc/cluster.mtx",
-        "clustering_tcc/barcode_cluster.tsv",
-        "clustering_tcc/var_cluster.tsv",
-        "clustering_tcc/preprocessed.pdf",
-        "clustering_tcc/clustering.pdf",
         "transcripts_quant/gene_merged.mtx",
-        "transcripts_quant/barcodes_gene_merged.txt",
-        "transcripts_quant/genes_gene_merged.txt",
-        #"clustering_genes/preprocessed.tsv",
-        "clustering_genes/anndata_filtered.loom",
-        "clustering_genes/cluster.mtx",
-        "clustering_genes/var_cluster.tsv",
-        "clustering_genes/barcode_cluster.tsv",
-        "clustering_genes/preprocessed.pdf",
-        "clustering_genes/clustering.pdf"
+        "transcripts_quant/tcc_merged.mtx",
+        "clustering_genes/anndata.loom",
+        "clustering_tcc/anndata.loom"
         ]
     return(file_list)
 ### main rule ##################################################################

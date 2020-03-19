@@ -27,7 +27,7 @@ import matplotlib.pyplot as plt
 import matplotlib.backends.backend_pdf
 
 # load matrix as AnnData object
-def get_matrix(countFile, outdir, barcodes, varlist, groups, extendedVar, type):
+def get_matrix(countFile, outdir, barcodes, varlist, groups, annotation, type):
     # load adata
     adata = sc.read_mtx(countFile)
 
@@ -37,8 +37,11 @@ def get_matrix(countFile, outdir, barcodes, varlist, groups, extendedVar, type):
     obs_new = obs[0].str.split("_", n=2, expand=True)
     n_col = obs_new.shape[1]
     if n_col > 1:
-        adata.obs['sample'] = obs_new.iloc[:, 0:n_col-1].apply(lambda x: '_'.join(x), axis=1).astype('category').values
+        adata.obs['sample'] = obs_new.iloc[:, 0:n_col-1].apply(lambda x: '_'.join(x),
+                                                                axis=1).astype('category').values
         adata.obs['barcode'] = obs_new[2].astype('category').values
+    else:
+        adata.obs['sample'] = 'one_sample'
 
     # set index
     if type == 'ECs':
@@ -56,21 +59,24 @@ def get_matrix(countFile, outdir, barcodes, varlist, groups, extendedVar, type):
         adata.var.index = var.index.values
 
     # extend variable df assumes same index
-    if extendedVar is not None and type == 'genes':
-        exVar = pd.read_csv(extendedVar, sep='\t', header=None, index_col=0)
-        adata.var = pd.merge(adata.var, exVar, left_index=True, right_index=True, how='left')
-    elif extendedVar is not None and type == 'ECs':
-        exVar = pd.read_csv(extendedVar, sep='\t', header=None, index_col=0)
-        adata.var = pd.merge(adata.var, exVar, left_on='geneID', right_index=True, how='left')
+    if annotation is not None and type == 'genes':
+        an = pd.read_csv(annotation, sep='\t', header=None, index_col=0)
+        adata.var = pd.merge(adata.var, an, left_index=True, right_index=True,
+                            how='left')
+    elif annotation is not None and type == 'ECs':
+        an = pd.read_csv(annotation, sep='\t', header=None, index_col=0)
+        adata.var = pd.merge(adata.var, an, left_on='geneID', right_index=True,
+                            how='left')
 
-    # add predivined group
+    # add predivined groups to obs, assumes categorical data and same index and header
     group_keys = None
     if groups is not None:
         obs_groups = pd.read_csv(groups, sep="\t")
         obs_groups.set_index(obs_groups.keys()[0], inplace=True)
         group_keys = obs_groups.keys()
         obs_groups = obs_groups[group_keys].astype('category') # assumed category based but maybe make this optional for continues scales
-        adata.obs = adata.obs.merge(obs_groups, how='left', left_index=True, right_index=True)
+        adata.obs = adata.obs.merge(obs_groups, how='left', left_index=True,
+                                    right_index=True)
 
     # color by gene
     print("\nData before filtering:")
@@ -80,58 +86,156 @@ def get_matrix(countFile, outdir, barcodes, varlist, groups, extendedVar, type):
 # preprocess tcc/gene matrix
 def preprocess(adata, outdir,  highlyvar):
     # open pdf file for plots
-    pdf = matplotlib.backends.backend_pdf.PdfPages(outdir+"/preprocessed.pdf")
+    pdf = matplotlib.backends.backend_pdf.PdfPages(outdir+"/preprocess_stats.pdf")
     plt.figure(figsize=(10,5))
 
+    # variables might be nice to expose these variables
+    min_counts_cell = 1000
+    min_genes_cell = 200
+    min_cells_gene = 3
+
+    print('\nMinumum counts per cell: {}'.format(min_counts_cell))
+    print('Minimum genes per cell: {}'.format(min_genes_cell))
+    print('Minimum cells expressing a gene: {}'.format(min_cells_gene))
+
+    samples = set(adata.obs['sample'].tolist())
+
     # make figure for basic filtering
-    qc = sc.pp.calculate_qc_metrics(adata)
+    sc.pp.calculate_qc_metrics(adata, inplace=True)
+    adata.obs['n_genes'] = (adata.X>0).sum(axis=1).A1
 
     # plot total counts per cell histogram
-    fig_counts_cell = plt.figure(figsize=(10,5))
-    fig_counts_cell = qc[0]['total_counts'].plot(kind='hist', logy=True, logx=True, bins=200, title='total counts per cell').get_figure()
-    print('\nMedian counts per cell: {}'.format(qc[0]['total_counts'].sort_values(ascending=False).median()))
-    print('\nAdata before filtering cells:\n{}'.format(adata))
-    sc.pp.filter_cells(adata, min_genes= 100)
-    sc.pp.filter_cells(adata, min_counts= 1000)
-    print('\nAdata after filtering cells:\n{}'.format(adata))
-    pdf.savefig(fig_counts_cell)
+    fig, axs = plt.subplots(1,3, figsize=(20,5))
+    colors = ['b', 'g', 'm', 'c', 'y']
+    max_counts = max(adata.obs['total_counts'].tolist())
+    xmin = 8e-1
+    xmax = max_counts
+    y0min = 8e-1
+    y0max = max(adata.obs['n_genes'].tolist())
+    y1min = 8e-1
+    y1max = max_counts
+
+    for i, sample in enumerate(samples):
+        # setup in loop variables
+        bc = adata.obs.index[adata.obs['sample'] == sample].tolist()
+        color = colors[i % 5]
+
+        # plot total counts against number of genes per barcode
+        x = adata.obs.loc[bc, 'total_counts'].tolist()
+        y = adata.obs.loc[bc, 'n_genes'].tolist()
+        axs[0].scatter(x, y, c=color, s=2)
+
+        # plot total counts per barcode
+        x = range(len(bc))
+        y = adata.obs.loc[bc, 'total_counts'].sort_values(ascending=False).tolist()
+        axs[1].plot(x, y, c=color)
+
+        # plot total counts as histogram
+        data = adata.obs.loc[bc, 'total_counts'].tolist()
+        axs[2].hist(data, bins=200, color=color)
+
+
+    axs[0].plot([min_counts_cell, min_counts_cell], [y0min, y0max], linewidth=1,
+                linestyle='--', color='r')
+    axs[0].plot([xmin, xmax], [min_genes_cell, min_genes_cell], linewidth=1,
+                linestyle='--', color='r')
+    axs[0].set_xlabel('total counts'); axs[0].set_ylabel('number of genes')
+    axs[0].set_ylim([y0min, y0max]); axs[0].set_xlim([xmin, xmax])
+    axs[0].set_yscale('log'); axs[0].set_xscale('log')
+    axs[0].set_title('Total counts and number of genes correlation')
+
+    axs[1].plot([xmin, xmax], [min_counts_cell, min_counts_cell], linewidth=1,
+                linestyle='--', color='r')
+    axs[1].set_xlabel('barcodes'); axs[1].set_ylabel('total counts')
+    axs[1].set_ylim([y1min, y1max]); axs[1].set_xlim([xmin, xmax])
+    axs[1].set_yscale('log'); axs[1].set_xscale('log')
+    axs[1].set_title('Total counts sorted')
+
+    # axs[2].set_ylim([1e0, 5e3]); axs[2].set_xlim([1e0, 5e4])
+    y2min, y2max = axs[2].get_ylim()
+    axs[2].plot([min_counts_cell, min_counts_cell], [y2min, y2max], linewidth=1,
+                linestyle='--', color='r')
+    axs[2].set_xlabel('Total counts'); axs[2].set_ylabel('Number of barcodes')
+    axs[2].set_yscale('log'); axs[2].set_xscale('linear')
+    axs[2].set_title('Total counts sorted')
+
+    # save the figure to preprocess_stats.pdf
+    pdf.savefig(fig)
+
+    #filter minimum number of genes per cell
+    print('\nAdata dimensions before filtering cells:\n{}'.format(adata.shape))
+    if adata.shape[1] <= min_genes_cell:
+        print('WARNING: few genes only {}'.format(adata.shape[1]))
+        sc.pp.filter_cells(adata, min_genes = math.floor(adata.shape[1]/2))
+    else:
+        sc.pp.filter_cells(adata, min_genes= min_genes_cell)
+    # filter minimum number of counts per cell, check if amount of cells with at least
+    if math.ceil(np.quantile(adata.obs['total_counts'].values, .90)) <= min_counts_cell:
+        # if 10% or less of cells are kept at threshold set threshold to keep 50%
+        print('WARNING: few counts per cell keep top 50% with cut off at: {} counts'.format(math.ceil(np.quantile(qc[0]['total_counts'].values, .50))))
+        sc.pp.filter_cells(adata, min_counts = math.ceil(np.quantile(adata.obs['total_counts'].values, .50)))
+    else:
+        sc.pp.filter_cells(adata, min_counts= min_counts_cell)
+    print('\nAdata dimensions after filtering cells:\n{}'.format(adata.shape))
+
+    for sample in samples:
+        bc = adata.obs.index[adata.obs['sample'] == sample].tolist()
+        print('\nMedian counts sample {} per cell: {}'.format(sample, adata.obs.loc[bc, 'total_counts'].sort_values(ascending=False).median()))
 
     # plot counts per gene
-    fig_counts_gene = plt.figure(figsize=(10,5))
-    fig_counts_gene = qc[1]['total_counts'].sort_values(ascending=False).plot(kind='line', logy=True, title='total counts per gene').get_figure()
-    print('\nMedian counts per gene: {}'.format(qc[1]['total_counts'].sort_values(ascending=False).median()))
-    print('\nAdata before filtering genes:\n{}'.format(adata))
-    sc.pp.filter_genes(adata, min_cells = 3)
-    # sc.pp.filter_genes(adata, min_counts = 6)
-    print('\nAdata after filtering genes:\n{}'.format(adata))
-    pdf.savefig(fig_counts_gene)
+    fig, axs = plt.subplots(1,2, figsize=(20,8))
 
-    # plot to see count distribution and gene distrubution
-    fig1 = sc.pl.violin(adata, 'n_counts', jitter=0.4, return_fig=True)
-    fig2 = sc.pl.violin(adata, 'n_genes', jitter=0.4, return_fig=True)
+    # plot total counts against number of barcodes per gene
+    x = adata.var['total_counts'].tolist()
+    y = adata.var['n_cells_by_counts'].tolist()
+    axs[0].scatter(x, y, c='g', s=2)
+    xmin, xmax = axs[0].get_xlim()
+    ymin, ymax = axs[0].get_ylim()
+    # plot from below 1, 0 not possible due to log axis
+    xmin = 8e-1; ymin = 8e-1
+    axs[0].set_ylim([ymin, ymax]); axs[0].set_xlim([xmin, xmax])
+    axs[0].plot([xmin, xmax], [min_cells_gene, min_cells_gene], linewidth=1,
+                linestyle='--', color='r')
+    axs[0].set_xlabel('total counts'); axs[0].set_ylabel('number of cells')
+    axs[0].set_yscale('log'); axs[0].set_xscale('log')
+    axs[0].set_title('Total counts and number of cells correlation')
+
+    # plot counts per gene normalized to precence in number of cells
+    adata.var['mean_count_per_expressing_cell'] = adata.var['total_counts']/adata.var['n_cells_by_counts']
+    axs[1].hist(adata.var['mean_count_per_expressing_cell'].sort_values(ascending=False),
+                bins=50, color='g')
+    axs[1].set_xlabel('Mean counts per expressing cell'); axs[1].set_ylabel('Number of genes')
+    axs[1].set_yscale('log'); axs[1].set_xscale('linear')
+    axs[1].set_title('Mean counts per gene per cell')
+
+    # save the figure to preprocess_stats.pdf
+    pdf.savefig(fig)
+
+    # filter min of cells per gene
+    sc.pp.filter_genes(adata, min_cells = min_cells_gene)
+    print('\nAdata dimensions after filtering genes:\n{}'.format(adata.shape))
 
     # normalize and log transform (should we use normalize per cell?)
-    qc = sc.pp.calculate_qc_metrics(adata)
-    adata.obs['n_counts'] = adata.X.sum(axis=1).A1
-    ntotal = math.ceil(np.quantile(qc[0]['total_counts'].values, .10)/100)*100 #round 90th quantile up to the nearest 100
+    ntotal = math.ceil(np.quantile(adata.obs['total_counts'].values, .90)/100)*100 #round 90th quantile up to the nearest 100
     sc.pp.normalize_total(adata, target_sum = ntotal,
                           exclude_highly_expressed = True,
                           inplace = True)
+    print('\nNormalize to value: {}'.format(ntotal))
     sc.pp.log1p(adata)
 
-    if highlyvar == True:
+    if highlyvar > 0 and highlyvar < adata.shape[1]:
+        print('\nSelection of highly variable genes')
         # set raw data before highly variable genes selection
         adata.raw = adata
-        sc.pp.highly_variable_genes(adata, n_top_genes=5000, inplace=True, subset=True)
+        sc.pp.highly_variable_genes(adata, n_top_genes=highlyvar, inplace=True,
+                                    subset=True)
         sc.pp.regress_out(adata, ['n_counts'])
         sc.pp.scale(adata, max_value=10)
-        print("\nAfter selection highly variable genes/TCCs:")
-        print(adata)
+        print("Adata dimensions after selection highly variable genes/TCCs: {}".format(adata.shape))
+    else:
+        print('No selection for highly variable genes')
 
-    # save figures close pdf file
-    pdf.savefig(fig1)
-    pdf.savefig(fig2)
-
+    # close preprocess_stats.pdf
     pdf.close()
 
     return(adata)
@@ -165,12 +269,6 @@ def clustercells(adata, outdir, group_keys):
             sc.tl.umap(adata, min_dist=0.1, spread=5)
             fig5 = sc.pl.umap(adata, color=key, return_fig=True, palette='tab20')
 
-    # save barcode cluster tsv
-    # if group_keys is None:
-    #     barcode_cluster = adata.obs.loc[:,'louvain']
-    # else:
-    #     barcode_cluster = adata.obs.loc[:,['louvain'] + group_keys.to_list()]
-    # barcode_cluster.to_csv(outdir+"/barcode_cluster.tsv", sep="\t")
     adata.obs.to_csv(outdir+"/barcode_cluster.tsv", sep="\t")
 
     # store genes
@@ -178,10 +276,9 @@ def clustercells(adata, outdir, group_keys):
 
     # store adata object
     scipy.io.mmwrite(outdir+"/cluster", adata.X)
-    #adata.to_df().to_csv(outdir+"/cluster.tsv", sep='\t', header=True)
 
     ## write the filtered anndata
-    adata.write_loom(outdir+"/anndata_filtered.loom", write_obsm_varm=True)
+    adata.write_loom(outdir+"/anndata.loom", write_obsm_varm=True)
 
     # save figures and close pdf
     pdf.savefig(fig1)
@@ -248,18 +345,18 @@ def parse_args(defaults=None):
                           help="file indicating cell types matching tcc.mtx",
                           default=None)
 
-    parser.add_argument("-ev", "--extendedVar",
-                          dest="extendedVar",
+    parser.add_argument("-a", "--annotation",
+                          dest="annotation",
                           required=False,
                           help="tsv file containing additional information to load into AnnData var e.g. gene name, chromosome or biotype",
                           default=None)
 
     parser.add_argument("-hv", "--highly-variable",
                          dest="highlyvar",
-                         action = 'store_true',
                          required=False,
                          help="to turn on filtering for highly variable genes/TCCs",
-                         default=False)
+                         type=int,
+                         default=0)
 
     return parser
 
@@ -275,18 +372,18 @@ def main():
     # correct for passing 'None' by
     if args.col_groups == 'None':
         args.col_groups = None
-    if args.extendedVar == 'None':
-        args.extendedVar = None
+    if args.annotation == 'None':
+        args.annotation = None
 
     print("parameters that were used:")
-    print("clustering_wrapper: \n--outdir {} \n--sample {} \n--barcodes {} \n--varlist {} \
-            \n--type {} \n--highly-variable {}".format(args.outdir,
+    print("clustering_wrapper: \n--outdir {} \n--sample {} \n--barcodes {} \
+            \n--varlist {} \n--type {} \n--highly-variable {}".format(args.outdir,
             args.sample, args.barcodes, args.varlist, args.type, args.highlyvar))
 
     # get matrix
     print("\nget matrix")
     adata, group_keys = get_matrix(args.sample, outdir, args.barcodes, args.varlist,
-                                   args.col_groups, args.extendedVar, args.type)
+                                   args.col_groups, args.annotation, args.type)
 
     print("\nstart preprocessing")
     adata = preprocess(adata, outdir, args.highlyvar)

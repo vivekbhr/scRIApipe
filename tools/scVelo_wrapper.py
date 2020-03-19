@@ -85,12 +85,6 @@ def get_matrix(sampleName, spliced_dir, unspliced_dir, prefix):
 
     s = sc.read_mtx(spliced_dir + prefix + "_isect.mtx")
     u = sc.read_mtx(unspliced_dir + prefix + "_isect.mtx")
-    #
-    # s_bcs = pd.read_csv(spliced_dir + prefix + ".barcodes.txt", header=None)
-    # u_bcs = pd.read_csv(unspliced_dir + prefix + ".barcodes.txt", header=None)
-    #
-    # s_genes = pd.read_csv(spliced_dir + prefix + ".genes_isect.txt", header=None)
-    # u_genes = pd.read_csv(unspliced_dir + prefix + ".genes_isect.txt", header=None)
 
     print(s_genes)
     print(u_genes)
@@ -238,35 +232,14 @@ def main():
     else:
         s = quant[0]['s']
         u = quant[0]['u']
-    #s_bcs = pd.concat([sample['s_bcs'] for sample in quant],ignore_index=False)
-    #u_bcs = pd.concat([sample['u_bcs'] for sample in quant],ignore_index=False)
-
-    ## get common indicies bw spliced and unspliced
-    #intersect = u_bcs.index.intersection(s_bcs.index)
-    #u_bcs = u_bcs.loc[intersect]
-    #s_bcs = s_bcs.loc[intersect]
-    #u = u[u_bcs.index.get_indexer_for(intersect)]
-    #s = s[s_bcs.index.get_indexer_for(intersect)]
 
     ## make anndata
     print("Making anndata object")
-    #genes = quant[0]['genes']
-    #genes.columns=["gid"]
-    #sadata = anndata.AnnData(X=s, obs=s_bcs, var=genes)
-    #uadata = anndata.AnnData(X=u, obs=u_bcs, var=genes)
-
     adata = s.copy()
     adata.layers["spliced"] = s.X
     adata.layers["unspliced"] = u.X
     adata.layers["ambiguous"] = scp.sparse.csr_matrix(np.zeros(adata.X.shape))
     adata.obs = s.obs
-
-    ## add gene names (from t2g)
-    #t2g = pd.read_csv(args.tr2gene_file, header=None, sep="\t", names=["tid", "gid", "gene"], index_col=False)
-    #t2g = t2g.drop_duplicates(["gid", "gene"])
-    #t2g = t2g.set_index("gid")
-    #adata.var["Gene"] = adata.var.index.map(t2g["gene"])
-    #adata.var["Transcript"] = adata.var.index.map(t2g["tid"])
 
     ## show spliced/unspliced props
     scv.pp.show_proportions(adata)
@@ -337,7 +310,6 @@ def main():
         if nveloGenes < 10:
             print("Still less than 10 velocity genes left. Output might not be meaningful")
 
-    #adata.layers['velocity']
     # velocity Rsq histogram
     hs = scv.pl.hist(adata.var['velocity_r2'], show = False)
     histfig = hs.get_figure()

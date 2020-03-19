@@ -1,4 +1,3 @@
-
 rule create_whitelist:
     input: barcode_tsv
     output: temp("whitelist_barcodes.txt")
@@ -108,40 +107,6 @@ rule get_counts:
         "{params.bashScript} {input} {output.mtx} {output.ec} {output.bc} \
         {params.bc_index} {params.ec_index} {params.header} {params.tmp1} {params.tmp2} > {log} 2>&1"
 
-        # """
-        # bustools text -p {input} 2> {log}| \
-        # awk -F "\t" 'BEGIN{{OFS=FS}} {{print($1, $3)}}' - | sort | uniq -c | \
-        # awk -F " " 'BEGIN{{OFS="\t"}} {{print($2, $3, $1)}}' > {params.tmp1} &&\
-        # echo "still going 1" >> {log} &&\
-        # cut -f 1 {params.tmp1} | sort | uniq | awk 'BEGIN{{OFS="\t"}} {{print($1, NR)}}' > {params.bc_index} &&\
-        # echo "still going 2" >> {log} &&\
-        # awk 'FNR==NR{{a[$1]=$2; next}} {{print(a[$1], $2, $3)}}' {params.bc_index} {params.tmp1} > {params.tmp2} &&\
-        # echo "still going 3" >> {log} &&\
-        # cut -f 1 {params.bc_index} > {output.bc} &&\
-        # echo "still going 4" >> {log} &&\
-        # cut -d " " -f 2 {params.tmp2} | sort -n | uniq | awk 'BEGIN{{OFS="\t"}} {{print($1, NR)}}' > {params.ec_index} &&\
-        # echo "still going 5" >> {log} &&\
-        # awk 'FNR==NR{{a[$1]=$2; next}} {{print($1, a[$2], $3)}}' {params.ec_index} {params.tmp2} > {params.tmp1} &&\
-        # tail -n 1 {params.bc_index} | cut -f 2 > {params.header} &&\
-        # echo "still going 6" >> {log} &&\
-        # cut -d " " -f 2 {params.tmp1} | sort -n -r | head -n 1 >> {log} &&\
-        # cut -d " " -f 2 {params.tmp1} | sort -n -r | head -n 1 >> {params.header} &&\
-        # awk 'END{{print(NR)}}' {params.tmp1} >> {log} &&\
-        # echo "still going 7" >> {log} &&\
-        # awk 'END{{print(NR)}}' {params.tmp1} >> {params.header} &&\
-        # echo 'still going 8' >> {log} &&\
-        # echo '%%MatrixMarket matrix coordinate real general' > {output.mtx} &&\
-        # awk 'BEGIN{{ORS=" "}}1' {params.header} >> {output.mtx} &&\
-        # echo "still going 9" >> {log} &&\
-        # echo '' >> {output.mtx} &&\
-        # echo "still going 10" >> {log} &&\
-        # cat {params.tmp1} >> {output.mtx} &&\
-        # echo "still going 11" >> {log} &&\
-        # cut -f 1 {params.ec_index} > {output.ec} &&\
-        # echo 'done' >> {log}
-        # """
-        #"{params.bashScript} {input} {params.out} 2> {log}" # {output.mtx} {output.bc} {output.ec}
-
 ## this rule gets TCCs and also creates EC to gene map
 ## NOTE: the TCC matrix output is not filtered for multi-genic ECs, but the
 ## ECtoGene map is, the rule "merge TCCs" would filter all samples for the multigenic
@@ -161,7 +126,6 @@ rule get_tcc:
     threads: 1
     conda: CONDA_SHARED_ENV
     shell:
-    #"{params.bustools} count -o {params.out} -g {input.t2g} -e {input.mtx} -t {input.transcripts} {input.busfile} > {log} 2>&1"
         "Rscript {params.rscript} {input.tr2g} {input.transcripts} {input.ecList} {input.ecToTr} {params.out} 2> {log} 2>&1"
 
 rule get_geneCounts:
@@ -180,5 +144,5 @@ rule get_geneCounts:
     log: "logs/get_geneCounts.{sample}.out"
     threads: 1
     conda: CONDA_SHARED_ENV
-    shell:  #"{params.bustools} count --genecounts -o {params.out} -g {input.t2g} -e {input.mtx} -t {input.transcripts} {input.busfile} > {log} 2>&1"
+    shell: 
         "Rscript {params.rscript} {input.ecToGene} {input.mtx} {input.ec} {input.bc} {params.out} > {log} 2>&1"
