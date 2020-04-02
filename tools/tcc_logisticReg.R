@@ -3,7 +3,7 @@
 
 library(Matrix)
 library(ggplot2)
-Args <- commandArgs(trailingOnly = TRUE)
+
 ## test Args
 #Args <- c("transcripts_quant/TCCs_filtered_merged.mtx",
 #          "transcripts_quant/barcodes_merged.txt",
@@ -12,6 +12,8 @@ Args <- commandArgs(trailingOnly = TRUE)
 #          0.1, "DTU_testing/ES_NPC_logisticReg")
 
 ## INPUT ARGS
+Args <- commandArgs(trailingOnly = TRUE)
+
 tcc.mtx <- readMM(Args[1])
 bc <- read.table(Args[2], header = FALSE, stringsAsFactors = FALSE)$V1
 ecmap <- read.delim(Args[3], header = FALSE, stringsAsFactors = FALSE)
@@ -19,23 +21,98 @@ tr2g <- read.table(Args[4], header = FALSE, stringsAsFactors = FALSE)
 padj_threshold <- as.numeric(Args[5])
 
 ## OUTPUT ARGS
-outprefix <- Args[6]
+bcClusterMap <- Args[6]
+threads <- Args[7]
+outprefix <- Args[8]
 
-#labels <- gsub("(.*)_[AGTC]*", "\\1", bc) ## need to find a way to use externally defined label
+
+## --------------- Functions ---------------------
+
+## get DTU
+lrt_gene <- function(gene, tcc_mtx, labels) {
+  mtx <- as.data.frame(as.matrix(tcc_mtx[ , grepl(gene, colnames(tcc_mtx))])) # subset mtx by gene
+  n <- paste("EC", 1:ncol(mtx), sep = "_") # col ID for the formula
+  colnames(mtx) <- n
+  mtx$label <- labels
+  fmla <- as.formula(paste("label ~ ", paste(n, collapse= "+")))
+  glm.fit <- glm(fmla, data = mtx, family = binomial)
+  fit_null <- glm("label ~ 1", data = mtx, family = binomial)
+  summary(glm.fit)
+  #glm.probs <- predict(glm.fit,type = "response")
+  lra <- anova(glm.fit, fit_null, test = "Chisq")
+  return(lra$`Pr(>Chi)`[2])
+}
+
+
+## plot ECs of a given gene
+plot_gene <- function(gene, ec_map, tcc_mtx, labels) {
+  print(gene)
+  test <- as.matrix(tcc_mtx[ , grepl(gene, colnames(tcc_mtx)), drop = FALSE])
+  ecmap2 <- ec_map[grepl(gene, ec_map$V1), ] # subset ecmap by gene
+  n <- paste0("TxSet: ", ecmap2$V2) # use the tx set as col IDs
+  #colnames(test) <- paste0("EC_", 1:ncol(test))
+  colnames(test) <- n
+  t <- as.data.frame(test)
+  t$labels <- labels
+  t <- reshape2::melt(t)
+  ggplot(t, aes(labels, value, col = labels)) + geom_jitter(height = 0.01) +
+    labs(x = "Sample", y = "log10(Counts)", title = gene) + facet_wrap(~variable) +
+    scale_y_log10()
+}
+
+
+## ---------------
+
+## --------------- Prepare --------------
 # rownames = sample_barcodes (unique)
 rownames(tcc.mtx) <- bc
 # colnames = gene name (non-unique)
-colnames(tcc.mtx) <- ecmap$V2
+colnames(tcc.mtx) <- ecmap$V1
 #cols <- colnames(tcc.mtx) == "ENSMUSG00000031575.18"
-#colSums(tcc.mtx[,cols])
 
-# keep track of associated txSet
+# Filter TCC, but keep track of associated txSet/labels
 kept_ecs <- colSums(tcc.mtx) > 10
-tcc.mtx <- tcc.mtx[rowSums(tcc.mtx) > 50, kept_ecs]
-#tcc.mtx <- tcc.mtx[rowSums(tcc.mtx) > 1,colSums(tcc.mtx) > 10]
+kept_bcs <- rowSums(tcc.mtx) > 50
+
+tcc.mtx <- tcc.mtx[kept_bcs, kept_ecs]
 ecmap <- ecmap[kept_ecs, ]
+bcLabels <- bcClusterMap[kept_bcs, ]
 
 
+## ------------- Execute -------------
+
+genes <- unique(colnames(tcc.mtx))
+## parallel
+system.time(
+  plist <- unlist(mclapply(genes, function(x) lrt_gene(x, tcc.mtx, bcLabels), 
+                           mc.cores = threads))
+)
+
+if(length(plist) == 0) {
+  warning("Output empty!!")
+  quit(save = "no", status = 1, runLast = FALSE)
+} else {
+  out <- data.frame(gene = genes, pval = plist)
+}
+
+out$padj <- p.adjust(out$pval, method = "BH")
+sigGenes <- as.character(out[out$padj < padj_threshold, ]$genes)
+topGenes <- as.character(out[order(out$padj, decreasing=F), "genes"][1:20])
+message(paste0(length(sigGenes), " significant genes left after FDR correction!!"))
+
+
+## ------------- Save Output -------------
+
+pdf(paste0(outprefix, "_sigGenes_plots.pdf"))
+lapply(topGenes, plot_gene, ec_map = ecmap)
+dev.off()
+## get names for sigGenes
+gn <- unique(tr2g[match(sigGenes, tr2g$V2), "V3"])
+write.table(gn, file = paste0(outprefix, "_sigGenes.txt"), quote = F, row.names = F, col.names = F)
+write.table(sigGenes, file = paste0(outprefix, "_sigGenes_ensID.txt"), quote = F, row.names = F, col.names = F)
+
+
+############### --------------- UNUSED --------------------  ###########
 ### pca/umap
 #tcc.mtx2 <- log2((tcc.mtx/colSums(tcc.mtx))*100000 + 0.1)
 #tcc.mtx2 <- tfidf(t(tcc.mtx))
@@ -52,59 +129,6 @@ ecmap <- ecmap[kept_ecs, ]
 #final.umap$cell <- n
 #final.umap$cell <- as.factor(gsub("(ESC|NPC)_.*", "\\1", rownames(tcc.mtx)))
 #ggplot(final.umap, aes(UMAP1, UMAP2, col = cell)) + geom_point()
-
-## logistic-reg + LRT per gene
-lrt_gene <- function(gene, tcc_mtx) {
-  mtx <- as.data.frame(as.matrix(tcc_mtx[ , grepl(gene, colnames(tcc_mtx))])) # subset mtx by gene
-  n <- paste("EC", 1:ncol(mtx), sep = "_") # col ID for the formula
-  colnames(mtx) <- n
-  mtx$label <- as.factor(gsub("(.*)_[AGTC]*", "\\1", rownames(mtx)))
-  fmla <- as.formula(paste("label ~ ", paste(n, collapse= "+")))
-  glm.fit <- glm(fmla, data = mtx, family = binomial)
-  fit_null <- glm("label ~ 1", data = mtx, family = binomial)
-  summary(glm.fit)
-  #glm.probs <- predict(glm.fit,type = "response")
-  lra <- anova(glm.fit, fit_null, test = "Chisq")
-  return(lra$`Pr(>Chi)`[2])
-}
-
-genes <- unique(colnames(tcc.mtx))
-out <- data.frame(genes = genes,
-                  pval = sapply(genes, lrt_gene, tcc_mtx = tcc.mtx))
-
-if(dim(out)[1] == 0) {
-  warning("Output empty!!")
-}
-
-out$padj <- p.adjust(out$pval, method = "BH")
-sigGenes <- as.character(out[out$padj < padj_threshold, ]$genes)
-
-message(paste0(length(sigGenes), " significant genes left after FDR correction!!"))
-
-## plot a given gene
-plot_gene <- function(gene, ec_map) {
-  print(gene)
-  test <- as.matrix(tcc.mtx[ , grepl(gene, colnames(tcc.mtx)), drop = FALSE])
-  ecmap2 <- ec_map[grepl(gene, ec_map$V2), ] # subset ecmap by gene
-  n <- paste0("TxSet: ", ecmap2$V3) # use the tx set as col IDs
-  #colnames(test) <- paste0("EC_", 1:ncol(test))
-  colnames(test) <- n
-  t <- as.data.frame(test)
-  t$labels <- gsub("(.*)_[AGTC]*", "\\1", rownames(t))
-  t <- reshape2::melt(t)
-  ggplot(t, aes(labels, value, col = labels)) + geom_jitter(height = 0.01) +
-    labs(x = "Sample", y = "log10(Counts)", title = gene) + facet_wrap(~variable) +
-    scale_y_log10()
-}
-
-pdf(paste0(outprefix, "_sigGenes_plots.pdf"))
-lapply(sigGenes, plot_gene, ec_map = ecmap)
-dev.off()
-
-## get names for sigGenes
-gn <- unique(tr2g[match(sigGenes, tr2g$V2), "V3"])
-write.table(gn, file = paste0(outprefix, "_sigGenes.txt"), quote = F, row.names = F, col.names = F)
-write.table(sigGenes, file = paste0(outprefix, "_sigGenes_ensID.txt"), quote = F, row.names = F, col.names = F)
 
 ##
 #tr <- read.delim("transcripts_quant/ESC_merged/transcripts.txt", header = F)
