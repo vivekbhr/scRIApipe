@@ -21,6 +21,7 @@ import sklearn
 import sys
 import loompy
 import scipy.optimize
+import scipy.io
 import scvelo as scv
 import glob
 import pickle
@@ -40,14 +41,57 @@ def get_matrix(sampleName, spliced_dir, unspliced_dir, prefix):
     spliced_dir = "velocity_quant/" + sampleName + "/" + spliced_dir + "/" #spliced_counts
     unspliced_dir = "velocity_quant/" + sampleName + "/" + unspliced_dir + "/" #unspliced_counts
 
+    # get intersection of genes and barcodes for each sample
+    s = scipy.io.mmread(spliced_dir + prefix + ".mtx")
+    u = scipy.io.mmread(unspliced_dir + prefix + ".mtx")
+
+    # get intersection of barcodes and perform on s and u
+    df_s_bcs = pd.read_csv(spliced_dir + prefix + ".barcodes.txt", header=None)
+    df_u_bcs = pd.read_csv(unspliced_dir + prefix + ".barcodes.txt", header=None)
+    s_bcs = df_s_bcs[0].values.tolist()
+    u_bcs = df_u_bcs[0].values.tolist()
+    bcs_is = [i for i in s_bcs if i in u_bcs]
+    s_bcs_is_int = [i for i in range(len(s_bcs)) if s_bcs[i] in bcs_is]
+    u_bcs_is_int = [i for i in range(len(u_bcs)) if u_bcs[i] in bcs_is]
+    s = s.tocsr()[s_bcs_is_int,:]
+    u = u.tocsr()[u_bcs_is_int,:]
+    s_bcs = df_s_bcs.iloc[s_bcs_is_int,:]
+    u_bcs = df_u_bcs.iloc[u_bcs_is_int,:]
+
+    # get intersection of genes and perform on s and u
+    df_s_genes = pd.read_csv(spliced_dir + prefix + ".genes.txt", header=None)
+    df_u_genes = pd.read_csv(unspliced_dir + prefix + ".genes.txt", header=None)
+    s_genes = df_s_genes[0].values.tolist()
+    u_genes = df_u_genes[0].values.tolist()
+    genes_is = [i for i in s_genes if i in u_genes]
+    s_genes_is_int = [i for i in range(len(s_genes)) if s_genes[i] in genes_is]
+    u_genes_is_int = [i for i in range(len(u_genes)) if u_genes[i] in genes_is]
+    s = s.tocsc()[:,s_genes_is_int]
+    u = u.tocsc()[:,u_genes_is_int]
+    s_genes = df_s_genes.iloc[s_genes_is_int,:]
+    u_genes = df_u_genes.iloc[u_genes_is_int,:]
+
+    # convert back to coo
+    s = s.tocoo()
+    u = u.tocoo()
+
+    # save intersected matrix, barcodes and genes
+    scipy.io.mmwrite(spliced_dir + prefix + "_isect.mtx", s)
+    scipy.io.mmwrite(unspliced_dir + prefix + "_isect.mtx", u)
+    df_s_bcs.to_csv(spliced_dir + prefix + ".barcodes_isect.txt", header=None, index=False)
+    df_u_bcs.to_csv(unspliced_dir + prefix + ".barcodes_isect.txt", header=None, index=False)
+    s_genes.to_csv(spliced_dir + prefix + ".genes_isect.txt", header=None, index=False)
+    u_genes.to_csv(unspliced_dir + prefix + ".genes_isect.txt", header=None, index=False)
+
     s = sc.read_mtx(spliced_dir + prefix + "_isect.mtx")
     u = sc.read_mtx(unspliced_dir + prefix + "_isect.mtx")
 
-    s_bcs = pd.read_csv(spliced_dir + prefix + ".barcodes.txt", header=None)
-    u_bcs = pd.read_csv(unspliced_dir + prefix + ".barcodes.txt", header=None)
-
-    s_genes = pd.read_csv(spliced_dir + prefix + ".genes_isect.txt", header=None)
-    u_genes = pd.read_csv(unspliced_dir + prefix + ".genes_isect.txt", header=None)
+    print(s_genes)
+    print(u_genes)
+    print(s_bcs)
+    print(u_bcs)
+    print(s)
+    print(u)
 
     s.obs.index = s_bcs[0].values
     u.obs.index = u_bcs[0].values
@@ -178,40 +222,24 @@ def main():
     ## prepare matrices
     print("Preparing matrices")
     quant = [get_matrix(x, 'geneCounts_spliced', 'geneCounts_unspliced', 'output') for x in args.samples]
-    # merge samples based on geneIDs
-    s = quant[0]['s'].concatenate([sample['s'] for sample in quant[1:]], join = 'inner',
-                              batch_key= 'sample', batch_categories=args.samples)
-    u = quant[0]['u'].concatenate([sample['u'] for sample in quant[1:]], join = 'inner',
-                              batch_key= 'sample', batch_categories=args.samples)
-    #s_bcs = pd.concat([sample['s_bcs'] for sample in quant],ignore_index=False)
-    #u_bcs = pd.concat([sample['u_bcs'] for sample in quant],ignore_index=False)
 
-    ## get common indicies bw spliced and unspliced
-    #intersect = u_bcs.index.intersection(s_bcs.index)
-    #u_bcs = u_bcs.loc[intersect]
-    #s_bcs = s_bcs.loc[intersect]
-    #u = u[u_bcs.index.get_indexer_for(intersect)]
-    #s = s[s_bcs.index.get_indexer_for(intersect)]
+    # merge samples based on geneIDs
+    if len(args.samples) > 1:
+        s = quant[0]['s'].concatenate([sample['s'] for sample in quant[1:]], join = 'inner',
+                                  batch_key= 'sample', batch_categories=args.samples)
+        u = quant[0]['u'].concatenate([sample['u'] for sample in quant[1:]], join = 'inner',
+                                  batch_key= 'sample', batch_categories=args.samples)
+    else:
+        s = quant[0]['s']
+        u = quant[0]['u']
 
     ## make anndata
     print("Making anndata object")
-    #genes = quant[0]['genes']
-    #genes.columns=["gid"]
-    #sadata = anndata.AnnData(X=s, obs=s_bcs, var=genes)
-    #uadata = anndata.AnnData(X=u, obs=u_bcs, var=genes)
-
     adata = s.copy()
     adata.layers["spliced"] = s.X
     adata.layers["unspliced"] = u.X
     adata.layers["ambiguous"] = scp.sparse.csr_matrix(np.zeros(adata.X.shape))
     adata.obs = s.obs
-
-    ## add gene names (from t2g)
-    #t2g = pd.read_csv(args.tr2gene_file, header=None, sep="\t", names=["tid", "gid", "gene"], index_col=False)
-    #t2g = t2g.drop_duplicates(["gid", "gene"])
-    #t2g = t2g.set_index("gid")
-    #adata.var["Gene"] = adata.var.index.map(t2g["gene"])
-    #adata.var["Transcript"] = adata.var.index.map(t2g["tid"])
 
     ## show spliced/unspliced props
     scv.pp.show_proportions(adata)
@@ -261,8 +289,12 @@ def main():
     sc.pp.neighbors(adata, n_pcs=30)
     sc.tl.louvain(adata)
     sc.tl.umap(adata, min_dist=0.1, spread=4)
-    fig = sc.pl.umap(adata, color=['louvain', 'sample'], return_fig=True)
-    fig.savefig(outdir+"/allsamples_UMAP.png")
+    if len(args.samples) > 1:
+        fig = sc.pl.umap(adata, color=['louvain', 'sample'], return_fig=True)
+        fig.savefig(outdir+"/allsamples_UMAP.png")
+    else:
+        fig = sc.pl.umap(adata, color=['louvain'], return_fig=True)
+        fig.savefig(outdir+"/allsamples_UMAP.png")
 
 
     ## Velocity
@@ -278,7 +310,6 @@ def main():
         if nveloGenes < 10:
             print("Still less than 10 velocity genes left. Output might not be meaningful")
 
-    #adata.layers['velocity']
     # velocity Rsq histogram
     hs = scv.pl.hist(adata.var['velocity_r2'], show = False)
     histfig = hs.get_figure()
@@ -289,11 +320,13 @@ def main():
     print("plotting and saving")
     fig1 = scv.pl.velocity_embedding_stream(adata, basis='umap', dpi = 300, use_raw = True, show = False)
     fig2 = scv.pl.velocity_embedding_grid(adata, basis='umap', color= 'louvain',dpi = 300, use_raw = True, show = False)
-    fig3 = scv.pl.velocity_embedding_grid(adata, basis='umap', color= 'sample',dpi = 300, use_raw = True, show = False)
+    if len(args.samples) > 1:
+        fig3 = scv.pl.velocity_embedding_grid(adata, basis='umap', color= 'sample',dpi = 300, use_raw = True, show = False)
+        fig3.get_figure().savefig(outdir+'/velocity-grid_samples.png')
 
     fig1.get_figure().savefig(outdir+'/velocity-stream_louvain.png')
     fig2.get_figure().savefig(outdir+'/velocity-grid_louvain.png')
-    fig3.get_figure().savefig(outdir+'/velocity-grid_samples.png')
+
 
     ## write the filtered anndata
     adata.write_loom(outdir+"/anndata_filtered.loom", write_obsm_varm=True)
