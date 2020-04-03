@@ -21,7 +21,7 @@ tr2g <- read.table(Args[4], header = FALSE, stringsAsFactors = FALSE)
 padj_threshold <- as.numeric(Args[5])
 
 ## OUTPUT ARGS
-bcClusterMap <- Args[6]
+bcClusterMap <- read.delim(Args[6], header = FALSE, stringsAsFactors = FALSE)
 threads <- Args[7]
 outprefix <- Args[8]
 
