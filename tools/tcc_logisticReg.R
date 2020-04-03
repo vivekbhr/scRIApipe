@@ -3,7 +3,7 @@
 
 library(Matrix)
 library(ggplot2)
-
+library(parallel)
 ## test Args
 #Args <- c("transcripts_quant/TCCs_filtered_merged.mtx",
 #          "transcripts_quant/barcodes_merged.txt",
@@ -96,15 +96,15 @@ if(length(plist) == 0) {
 }
 
 out$padj <- p.adjust(out$pval, method = "BH")
-sigGenes <- as.character(out[out$padj < padj_threshold, ]$genes)
-topGenes <- as.character(out[order(out$padj, decreasing=F), "genes"][1:20])
+sigGenes <- as.character(out[out$padj < padj_threshold, ]$gene)
+topGenes <- as.character(out[order(out$padj, decreasing=F), "gene"][1:20])
 message(paste0(length(sigGenes), " significant genes left after FDR correction!!"))
 
 
 ## ------------- Save Output -------------
 
 pdf(paste0(outprefix, "_sigGenes_plots.pdf"))
-lapply(topGenes, plot_gene, ec_map = ecmap)
+lapply(topGenes, plot_gene, tcc_mtx = tcc.mtx, ec_map = ecmap, labels = bcLabels)
 dev.off()
 ## get names for sigGenes
 gn <- unique(tr2g[match(sigGenes, tr2g$V2), "V3"])
