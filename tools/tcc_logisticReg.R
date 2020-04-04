@@ -11,18 +11,24 @@ library(parallel)
 #          "annotations/tr2g.tsv",
 #          0.1, "DTU_testing/ES_NPC_logisticReg")
 
-## INPUT ARGS
+## ---------------- INPUT ARGS ---------------
 Args <- commandArgs(trailingOnly = TRUE)
 
+# merged TCC matrix
 tcc.mtx <- readMM(Args[1])
+# merged barcode list
 bc <- read.table(Args[2], header = FALSE, stringsAsFactors = FALSE)$V1
+# merged+filtered Gene->tx->EC map
 ecmap <- read.delim(Args[3], header = FALSE, stringsAsFactors = FALSE)
+# tr2g annotation
 tr2g <- read.table(Args[4], header = FALSE, stringsAsFactors = FALSE)
+# padj threshold 
 padj_threshold <- as.numeric(Args[5])
-
-## OUTPUT ARGS
+# barcode -> cluster mapping (from TCC clustering wrapper)
 bcClusterMap <- read.delim(Args[6], header = FALSE, stringsAsFactors = FALSE)
+# No. of threads to use
 threads <- Args[7]
+# Output file prefix (a tsv file with Gene-> pvalue + a pdf with plots are created)
 outprefix <- Args[8]
 
 
