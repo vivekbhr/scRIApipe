@@ -25,30 +25,47 @@ tr2g <- read.table(Args[4], header = FALSE, stringsAsFactors = FALSE)
 # padj threshold 
 padj_threshold <- as.numeric(Args[5])
 # barcode -> cluster mapping (from TCC clustering wrapper)
-bcClusterMap <- read.delim(Args[6], header = FALSE, stringsAsFactors = FALSE)
+bcClusterMap <- read.delim(Args[6], header = FALSE, stringsAsFactors = FALSE, row.names=1)
 # No. of threads to use
 threads <- Args[7]
 # Output file prefix (a tsv file with Gene-> pvalue + a pdf with plots are created)
 outprefix <- Args[8]
+# optional: what to regress (geneSum/cellSum or both)
+regressVars <- Args[9] # "geneSum+cellSum"
 
 
 ## --------------- Functions ---------------------
 
-## get DTU
-lrt_gene <- function(gene, tcc_mtx, labels) {
+## get DTU 
+lrt_gene <- function(gene, tcc_mtx, labels, regress = NA) {
+  # cell sum to regress
+  cellSum <- rowSums(tcc_mtx)
   mtx <- as.data.frame(as.matrix(tcc_mtx[ , grepl(gene, colnames(tcc_mtx))])) # subset mtx by gene
   n <- paste("EC", 1:ncol(mtx), sep = "_") # col ID for the formula
   colnames(mtx) <- n
+  # gene sum to regress
+  mtx$geneSum <- rowSums(mtx)
+  mtx$cellSum <- cellSum
   mtx$label <- labels
-  fmla <- as.formula(paste("label ~ ", paste(n, collapse= "+")))
-  glm.fit <- glm(fmla, data = mtx, family = binomial)
-  fit_null <- glm("label ~ 1", data = mtx, family = binomial)
+  
+  ## prepare formula
+  fmla_alt <- paste("label ~ ", paste(n, collapse= "+"))
+  fmla_null <- "label ~ 1"
+  
+  if(!is.na(regress)) {
+    fmla_alt <- paste(fmla_alt, regress, sep="+")
+    fmla_null <- paste("label ~ ", regress)
+  }
+  ## glm fit
+  fmla_alt <- as.formula(fmla_alt)
+  fmla_null <- as.formula(fmla_null)
+  glm.fit <- glm(fmla_alt, data = mtx, family = binomial)
+  fit_null <- glm(fmla_null, data = mtx, family = binomial)
   summary(glm.fit)
   #glm.probs <- predict(glm.fit,type = "response")
   lra <- anova(glm.fit, fit_null, test = "Chisq")
   return(lra$`Pr(>Chi)`[2])
 }
-
 
 ## plot ECs of a given gene
 plot_gene <- function(gene, ec_map, tcc_mtx, labels) {
@@ -82,7 +99,7 @@ kept_bcs <- rowSums(tcc.mtx) > 50
 
 tcc.mtx <- tcc.mtx[kept_bcs, kept_ecs]
 ecmap <- ecmap[kept_ecs, ]
-bcLabels <- bcClusterMap[kept_bcs, ]
+bcLabels <- as.factor(bcClusterMap[kept_bcs, ])
 
 
 ## ------------- Execute -------------
@@ -90,7 +107,7 @@ bcLabels <- bcClusterMap[kept_bcs, ]
 genes <- unique(colnames(tcc.mtx))
 ## parallel
 system.time(
-  plist <- unlist(mclapply(genes, function(x) lrt_gene(x, tcc.mtx, bcLabels), 
+  plist <- unlist(mclapply(genes, function(x) lrt_gene(x, tcc.mtx, bcLabels, regress=regressVars), 
                            mc.cores = threads))
 )
 
