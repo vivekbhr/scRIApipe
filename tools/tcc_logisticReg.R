@@ -33,6 +33,7 @@ outprefix <- Args[8]
 # optional: what to regress (geneSum/cellSum or both)
 regressVars <- Args[9] # "geneSum+cellSum"
 
+if(regressVars == "NA") regressVars <- NA 
 
 ## --------------- Functions ---------------------
 
