@@ -120,7 +120,8 @@ if(length(plist) == 0) {
 }
 
 out$padj <- p.adjust(out$pval, method = "BH")
-sigGenes <- as.character(out[out$padj < padj_threshold, ]$gene)
+out_sig <- out[out$padj < padj_threshold, ]
+sigGenes <- as.character(out_sig$gene)
 topGenes <- as.character(out[order(out$padj, decreasing=F), "gene"][1:20])
 message(paste0(length(sigGenes), " significant genes left after FDR correction!!"))
 
@@ -130,10 +131,13 @@ message(paste0(length(sigGenes), " significant genes left after FDR correction!!
 pdf(paste0(outprefix, "_sigGenes_plots.pdf"))
 lapply(topGenes, plot_gene, tcc_mtx = tcc.mtx, ec_map = ecmap, labels = bcLabels)
 dev.off()
+
 ## get names for sigGenes
-gn <- unique(tr2g[match(sigGenes, tr2g$V2), "V3"])
-write.table(gn, file = paste0(outprefix, "_sigGenes.txt"), quote = F, row.names = F, col.names = F)
-write.table(sigGenes, file = paste0(outprefix, "_sigGenes_ensID.txt"), quote = F, row.names = F, col.names = F)
+if(!is.null(tr2g$V3)) {
+  out_sig$symbol <- unique(tr2g[match(out_sig$gene, tr2g$V2), "V3"])
+}
+write.table(out_sig, file = paste0(outprefix, "_sigGenes.tsv"), quote = F, 
+            sep = "\t", row.names = F, col.names = T)
 
 
 ############### --------------- UNUSED --------------------  ###########
