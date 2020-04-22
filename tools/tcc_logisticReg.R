@@ -120,6 +120,7 @@ if(length(plist) == 0) {
 }
 
 out$padj <- p.adjust(out$pval, method = "BH")
+out[is.na(out$padj), "padj"] <- 1
 out_sig <- out[out$padj < padj_threshold, ]
 sigGenes <- as.character(out_sig$gene)
 topGenes <- as.character(out[order(out$padj, decreasing=F), "gene"][1:20])
