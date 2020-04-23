@@ -1,6 +1,0 @@
-name: busparse
-channels:
-  - conda-forge
-  - bioconda
-dependencies:
-  - bioconductor-busparse

@@ -10,67 +10,71 @@ single-cell **R**NA **I**soform **A**nalysis **Pipe**line
 
 ## How to run
 
-1. Clone the repo
+1. Clone the repo in a suitable place. (we will call this path <workflow_dir>)
 
 ```
 git clone https://github.com/vivekbhr/scRIApipe.git
 ```
 
-2. Go to the cloned directory and set up conda env for the workflow
+2. Set up conda env for the workflow
 
 ```
-cd scRIApipe
-conda env create -f env.yaml -n scria
+conda create -n scria python pip
+conda activate scria && pip install snakemake
 ```
 
-3. configure the config.yaml
+3. Move to the folder where you wan to run the workflow, and prepare the config.yaml
+
+```
+cd <your output dir>
+cp <workflow_dir>/config.yaml .
+vim config.yaml ## now modify the paths as per your requirements
+```
 
 The workflow needs
-1) path to a cDNA fasta file
-2) path to a GTF file
-3) UCSC ID of the genome
+1) path to a GTF file (preferably pre-filter the GTF to remove pseudogene and low confidence annotations)
+2) UCSC ID of the genome
+
 
 cDNA fasta and GTF can be downloaded [here](https://www.ensembl.org/info/data/ftp/index.html)
 UCSC ID is, for example "mm10" (mouse) or "hg38" (human)
 
-Copy the config.yaml from the folder to your output folder (where you intend to run the pipeline) and replace the information with your relevant information.
-
-4. Test bustools binary
-
-Current release of bustools has a bug, therefore I provided a compiled (bugfixed) bustools with the workflow. Check that it works by trying
+Additional parameters for the workflow can be accessed via --help
 
 ```
-cd tools && kallisto
+<workflow_dir>/scRIA --help
 ```
 
-If the help appears, we are set! If not, we need to recompile bustools for your system. Do the following (outside of scRIApipe directory):
+4. Test-drive the workflow
 
 ```
-git clone https://github.com/BUStools/bustools.git
-cd bustools && git checkout devel
-mkdir build && cd build && cmake ..
-make
+## inside the output dir
+<workflow_dir>/scRIA -i <fastq_folder> -o . -c <your>config.yaml -j <jobs> -s ' -np'
 ```
 
-If there are no errors, copy the bustools binary to the scRIApipe tools folder (if error, look for help)
+## 4. Submission parameters
 
-```
-cp bustools <scRIApipe_folder>/tools/
-```
+#### Running on HPC Cluster
+  - In the workflow command above, **j** is the number of parallel jobs you want to run, **-cl** means submit to cluster (default is to run locally). Therefore if you wish to run the workflow on a cluster, simply use the workflow with the -cl command on the submission node.
 
-5. Workflow is now set, do the following to run the Workflow
+  - cluster configuration, such as memory and cluster submission command are placed in [cluster_config.yaml](./cluster_config.yaml), and can be modified to suite the users internal infrastructure.
 
-```
-conda activate scria
-<scRIApipe_folder>/scRIA -i fastq_folder -o output_folder -c <your>config.yaml -j <jobs> -cl
-```
+#### Dry-run
+In order to just test what the workflow would do, use the command `-s ' -np' `
 
-here **j** is the number of parallel josb you want to run, **-cl** means submit to cluster (default is to run locally)
-
-After running the pipeline, **LOG** file are stored in the /log/ directory and the workflow top-level log is in scRIA.log file.
-
-**NOTE: memory errors**
+#### memory errors
 Index builing needs >40G of memory, if the workflow fails and the *logs/velocity_index.err* says something like `std::badalloc`, increase memory in the file `cluster_config.yaml` in the scRIA folder.
+
+
+### Other technical Notes
+
+  - After running the pipeline, **LOG** file are stored in the **<output>/log/** directory and the workflow top-level log is in scRIA.log file.
+
+  - Currently the -o option is not very flexible and and pipeline works only when it's executed in the output directory.
+
+  - Use the -t argument to specify a local directory for temp files. Default is to use the /tmp/ folder, which might have low space on cluster (unless tmpspace is specified in cluster_config.yaml)
+
+  - **Manual interruption of the workflow**: Simple Ctrl+C is enough to cancel/inturrupt the workflow. However, in some cases re-running the workflow after inturruption might fail with message "Locked working directory". In that case, please run the workflow with `-s ' --unlock'` once.
 
 ## Output
 
@@ -80,4 +84,4 @@ Major outputs of the workflow are:
   - Gene counts in folder `<outdir>/transcripts_quant/<sample>/gene_counts/gene.mtx`
   - RNA velocity output in folder `<outdir>/velocity_output` (normal/filtered loom files, velocity plots)
 
-![](./velocity-stream_louvain_example.png)
+  ![](./velocity-stream_louvain_example.png)
