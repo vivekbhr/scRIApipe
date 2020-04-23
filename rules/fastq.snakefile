@@ -20,11 +20,12 @@ rule FastQC:
     output:
         "FASTQ/FastQC/{sample}{read}_fastqc.html"
     params:
-        out = "FASTQ/FastQC"
+        out = "FASTQ/FastQC",
+        tmp = tempDir
     log: "logs/FastQC.{sample}{read}.out"
     threads: 2
     conda: CONDA_SHARED_ENV
-    shell: "fastqc -o {params.out} {input} 2> {log} 2>&1"
+    shell: "fastqc -d {params.tmp} -t {threads} -o {params.out} {input} 2> {log} 2>&1"
 
 if downsample:
     rule FASTQdownsample:
