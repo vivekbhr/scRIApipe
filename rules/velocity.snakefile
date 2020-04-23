@@ -161,7 +161,7 @@ rule get_tcc_spliced:
         rscript = os.path.join(workflow.basedir, "tools", "get_ec_geneMap.R")
     log: "logs/get_tcc_spliced_{sample}.out"
     threads: 1
-    conda: CONDA_SHARED_ENV
+    conda: CONDA_R_ENV
     shell:
         "Rscript {params.rscript} {input.tr2g} {input.transcripts} {input.ecList} {input.ecToTr} {params.out} 2> {log} 2>&1"
 
@@ -178,7 +178,7 @@ rule get_tcc_unspliced:
         rscript = os.path.join(workflow.basedir, "tools", "get_ec_geneMap.R")
     log: "logs/get_tcc_unspliced_{sample}.out"
     threads: 1
-    conda: CONDA_SHARED_ENV
+    conda: CONDA_R_ENV
     shell:
         "Rscript {params.rscript} {input.tr2g} {input.transcripts} {input.ecList} {input.ecToTr} {params.out} 2> {log} 2>&1"
 
@@ -197,7 +197,7 @@ rule geneCounts_spliced:
         rscript = os.path.join(workflow.basedir, "tools", "get_geneCounts.R")
     log: "logs/get_geneCounts.{sample}.out"
     threads: 1
-    conda: CONDA_SHARED_ENV
+    conda: CONDA_R_ENV
     shell:
         "Rscript {params.rscript} {input.ecToGene} {input.mtx} {input.ec} {input.bc} {params.out} > {log} 2>&1"
 
@@ -216,7 +216,7 @@ rule geneCounts_unspliced:
         rscript = os.path.join(workflow.basedir, "tools", "get_geneCounts.R")
     log: "logs/get_geneCounts.{sample}.out"
     threads: 1
-    conda: CONDA_SHARED_ENV
+    conda: CONDA_R_ENV
     shell:
         "Rscript {params.rscript} {input.ecToGene} {input.mtx} {input.ec} {input.bc} {params.out} > {log} 2>&1"
 

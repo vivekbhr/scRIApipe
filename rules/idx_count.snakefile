@@ -23,7 +23,7 @@ rule prep_annotation:
         out = "logs/prep_annotation.out",
         err = "logs/prep_annotation.err"
     threads: 2
-    conda: CONDA_BUS_ENV
+    conda: CONDA_R_ENV
     shell: "{params.script} {params.genome} {input} {params.readLength} {params.outdir} > {log.out} 2> {log.err}"
 
 rule transcript_index:
@@ -124,7 +124,7 @@ rule get_tcc:
         rscript = os.path.join(workflow.basedir, "tools", "get_ec_geneMap.R")
     log: "logs/get_tcc_{sample}.out"
     threads: 1
-    conda: CONDA_SHARED_ENV
+    conda: CONDA_R_ENV
     shell:
         "Rscript {params.rscript} {input.tr2g} {input.transcripts} {input.ecList} {input.ecToTr} {params.out} 2> {log} 2>&1"
 
@@ -143,6 +143,6 @@ rule get_geneCounts:
         rscript = os.path.join(workflow.basedir, "tools", "get_geneCounts.R")
     log: "logs/get_geneCounts.{sample}.out"
     threads: 1
-    conda: CONDA_SHARED_ENV
-    shell: 
+    conda: CONDA_R_ENV
+    shell:
         "Rscript {params.rscript} {input.ecToGene} {input.mtx} {input.ec} {input.bc} {params.out} > {log} 2>&1"

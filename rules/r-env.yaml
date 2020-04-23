@@ -1,0 +1,34 @@
+name: r-env
+channels:
+  - r
+  - bioconda
+  - conda-forge
+dependencies:
+ - pandoc = 2.7.1
+ - r-base
+ - r-devtools
+ - r-biocmanager
+ - r-dplyr = 0.8.0.1
+ - r-ggplot2 = 3.1.0
+ - r-pheatmap
+ - r-rmarkdown
+ - r-knitr >= 1.6
+ - r-dt
+ - r-rcolorbrewer
+ - r-magrittr
+ - r-readr
+ - bioconductor-deseq2
+ - bioconductor-tximport
+ - bioconductor-bsgenome
+ - bioconductor-genomeinfodb
+ - bioconductor-annotationdbi
+ - bioconductor-genomicfeatures
+ - bioconductor-annotationhub
+ - bioconductor-pcamethods
+ - bioconductor-rhdf5
+ - bioconductor-annotationfilter
+ - bioconductor-ensembldb
+ - bioconductor-plyranges
+ - bioconductor-genomeinfodbdata
+ - bioconductor-bsgenome.hsapiens.ucsc.hg38
+ - bioconductor-bsgenome.mmusculus.ucsc.mm10

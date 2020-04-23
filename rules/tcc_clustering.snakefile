@@ -17,8 +17,8 @@ rule merge_tcc:
         samples = ",".join(expand("{sample}", sample = samples)),
         mergeBy = "TxSet"
     log: "logs/merge_TCCs.out"
-    threads: 1
-    conda: CONDA_SHARED_ENV
+    threads: 2
+    conda: CONDA_R_ENV
     shell:
         "Rscript {params.rscript} {params.mtxList} {params.ecToGeneList} {params.ecList} {params.bcList} {params.samples} {params.mergeBy} \
          {output.mtx} {output.ECmap} {output.bc} 2> {log} 2>&1"
