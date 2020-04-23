@@ -22,7 +22,7 @@ bc <- read.table(Args[2], header = FALSE, stringsAsFactors = FALSE)$V1
 ecmap <- read.delim(Args[3], header = FALSE, stringsAsFactors = FALSE)
 # tr2g annotation
 tr2g <- read.table(Args[4], header = FALSE, stringsAsFactors = FALSE)
-# padj threshold 
+# padj threshold
 padj_threshold <- as.numeric(Args[5])
 # barcode -> cluster mapping (from TCC clustering wrapper)
 bcClusterMap <- read.delim(Args[6], header = FALSE, stringsAsFactors = FALSE, row.names=1)
@@ -33,11 +33,11 @@ outprefix <- Args[8]
 # optional: what to regress (geneSum/cellSum or both)
 regressVars <- Args[9] # "geneSum+cellSum"
 
-if(regressVars == "NA") regressVars <- NA 
+if(regressVars == "NA") regressVars <- NA
 
 ## --------------- Functions ---------------------
 
-## get DTU 
+## get DTU
 lrt_gene <- function(gene, tcc_mtx, labels, regress = NA) {
   # cell sum to regress
   cellSum <- rowSums(tcc_mtx)
@@ -48,11 +48,11 @@ lrt_gene <- function(gene, tcc_mtx, labels, regress = NA) {
   mtx$geneSum <- rowSums(mtx)
   mtx$cellSum <- cellSum
   mtx$label <- labels
-  
+
   ## prepare formula
   fmla_alt <- paste("label ~ ", paste(n, collapse= "+"))
   fmla_null <- "label ~ 1"
-  
+
   if(!is.na(regress)) {
     fmla_alt <- paste(fmla_alt, regress, sep="+")
     fmla_null <- paste("label ~ ", regress)
@@ -95,8 +95,8 @@ colnames(tcc.mtx) <- ecmap$V1
 #cols <- colnames(tcc.mtx) == "ENSMUSG00000031575.18"
 
 # Filter TCC, but keep track of associated txSet/labels
-kept_ecs <- colSums(tcc.mtx) > 10
-kept_bcs <- rowSums(tcc.mtx) > 50
+kept_ecs <- colSums(tcc.mtx) >= 100
+kept_bcs <- rowSums(tcc.mtx) >= 5000
 
 tcc.mtx <- tcc.mtx[kept_bcs, kept_ecs]
 ecmap <- ecmap[kept_ecs, ]
@@ -108,7 +108,7 @@ bcLabels <- as.factor(bcClusterMap[kept_bcs, ])
 genes <- unique(colnames(tcc.mtx))
 ## parallel
 system.time(
-  plist <- unlist(mclapply(genes, function(x) lrt_gene(x, tcc.mtx, bcLabels, regress=regressVars), 
+  plist <- unlist(mclapply(genes, function(x) lrt_gene(x, tcc.mtx, bcLabels, regress=regressVars),
                            mc.cores = threads))
 )
 
@@ -137,7 +137,7 @@ dev.off()
 if(!is.null(tr2g$V3)) {
   out_sig$symbol <- unique(tr2g[match(out_sig$gene, tr2g$V2), "V3"])
 }
-write.table(out_sig, file = paste0(outprefix, "_sigGenes.tsv"), quote = F, 
+write.table(out_sig, file = paste0(outprefix, "_sigGenes.tsv"), quote = F,
             sep = "\t", row.names = F, col.names = T)
 
 
