@@ -13,7 +13,8 @@ def load_configfile(configfile):
 
 def set_condaEnv():
     return{'CONDA_SHARED_ENV': 'env.yaml',
-            'CONDA_BUS_ENV' : 'bus_env.yaml'}
+            'CONDA_BUS_ENV' : 'bus-env.yaml',
+            'CONDA_R_ENV': 'r-env.yaml'}
 
 def get_sample_names(infiles, ext, reads):
     """
