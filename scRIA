@@ -78,6 +78,11 @@ def runAndCleanup(args, cmd):
     if args.verbose:
         print("\n{}\n".format(cmd))
 
+    if args.cluster:
+        dir = args.outdir + '/cluster_logs'
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+
     # write log file
     f = open(os.path.join(args.outdir, "scRIA.log"), "w")
     f.write(" ".join(sys.argv) + "\n\n")
