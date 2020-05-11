@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 from glob import glob
 import os.path
 
-# Set __version__
+# Set __version__ to keep __init__.py non-empty
 exec(open('scriapipe/__init__.py').read())
 requires = open("requirements.txt").read().strip().split("\n")
 

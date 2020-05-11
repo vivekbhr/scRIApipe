@@ -148,8 +148,9 @@ def parse_args(defaults=None):
 
     parser.add_argument("-t", "--tempDir",
                           dest="tempDir",
-                          help="Directory to store temporary files. (default: '%(default)s')",
-                          default='/tmp/')
+                          action="store_true",
+                          help="Store temporary files in tmp folder located in the output folder",
+                          default=False)
 
     parser.add_argument("-p", "--protocol",
                           dest="protocol",
@@ -228,6 +229,14 @@ def main():
     parser = parse_args()
     args = parser.parse_args()
     args.outdir = os.path.abspath(args.outdir)
+
+    if args.tempDir:
+        args.tempDir = os.path.join(args.outdir, "tmp/")
+        if not os.path.exists(args.tempDir):
+            os.makedirs(args.tempDir)
+    else:
+        args.tempDir = "/tmp/"
+
     # Handle YAML and log files
     snakemake_cmd = commonYAMLandLogs(baseDir, args, __file__)
     # Run everything
