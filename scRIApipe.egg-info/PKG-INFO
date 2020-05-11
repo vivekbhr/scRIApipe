@@ -1,0 +1,11 @@
+Metadata-Version: 1.0
+Name: scRIApipe
+Version: 0.0.1
+Summary: A workflow for identifying differantial transcript usage
+Home-page: https://github.com/vivekbhr/scRIApipe
+Author: Vivek Bhardwaj and Thijs Makaske
+Author-email: UNKNOWN
+License: MIT
+Description: UNKNOWN
+Keywords: splicing isoform kallisto
+Platform: UNKNOWN
