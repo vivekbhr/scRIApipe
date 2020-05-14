@@ -4,12 +4,18 @@
 library(Matrix)
 library(ggplot2)
 library(parallel)
+library(nnet)
+library(lmtest)
 ## test Args
-#Args <- c("transcripts_quant/TCCs_filtered_merged.mtx",
-#          "transcripts_quant/barcodes_merged.txt",
-#          "transcripts_quant/ECs_filtered_merged.txt",
-#          "annotations/tr2g.tsv",
-#          0.1, "DTU_testing/ES_NPC_logisticReg")
+Args <- c("transcripts_quant/TCCs_filtered_merged.mtx",
+          "transcripts_quant/barcodes_merged.txt",
+          "transcripts_quant/ECs_filtered_merged.txt",
+          "annotations/tr2g.tsv",
+          0.01, 
+          "bc_clusterMap.tsv",
+          20,
+          "../mLR_test/noregression2_sigGenes.tsv",
+          "NA")
 
 ## ---------------- INPUT ARGS ---------------
 Args <- commandArgs(trailingOnly = TRUE)
@@ -27,7 +33,7 @@ padj_threshold <- as.numeric(Args[5])
 # barcode -> cluster mapping (from TCC clustering wrapper)
 bcClusterMap <- read.delim(Args[6], header = FALSE, stringsAsFactors = FALSE, row.names=1)
 # No. of threads to use
-threads <- Args[7]
+threads <- as.numeric(Args[7])
 # Output file prefix (a tsv file with Gene-> pvalue + a pdf with plots are created)
 outprefix <- Args[8]
 # optional: what to regress (geneSum/cellSum or both)
@@ -38,7 +44,8 @@ if(regressVars == "NA") regressVars <- NA
 ## --------------- Functions ---------------------
 
 ## get DTU
-lrt_gene <- function(gene, tcc_mtx, labels, regress = NA) {
+lrt_gene <- function(gene, tcc_mtx, labels, 
+                     regress = NA, fit.type = "multinom") {
   # cell sum to regress
   cellSum <- rowSums(tcc_mtx)
   mtx <- as.data.frame(as.matrix(tcc_mtx[ , grepl(gene, colnames(tcc_mtx))])) # subset mtx by gene
@@ -57,15 +64,25 @@ lrt_gene <- function(gene, tcc_mtx, labels, regress = NA) {
     fmla_alt <- paste(fmla_alt, regress, sep="+")
     fmla_null <- paste("label ~ ", regress)
   }
-  ## glm fit
   fmla_alt <- as.formula(fmla_alt)
   fmla_null <- as.formula(fmla_null)
-  glm.fit <- glm(fmla_alt, data = mtx, family = binomial)
-  fit_null <- glm(fmla_null, data = mtx, family = binomial)
-  summary(glm.fit)
-  #glm.probs <- predict(glm.fit,type = "response")
-  lra <- anova(glm.fit, fit_null, test = "Chisq")
-  return(lra$`Pr(>Chi)`[2])
+  
+  if(fit.type == "glm") {
+    ## glm fit
+    glm.fit <- glm(fmla_alt, data = mtx, family = binomial)
+    fit_null <- glm(fmla_null, data = mtx, family = binomial)
+    lra <- anova(glm.fit, fit_null, test = "Chisq")
+    pval <- lra$`Pr(>Chi)`[2]
+    
+  } else {
+    ## multinom fit
+    fit <- nnet::multinom(fmla_alt, data = mtx)
+    fit_null <- nnet::multinom(fmla_null, data = mtx)
+    lrt <- lrtest(fit, fit_null)
+    pval <- lrt$`Pr(>Chisq)`[2]
+  }
+  
+  return(pval)
 }
 
 ## plot ECs of a given gene
@@ -101,7 +118,6 @@ kept_bcs <- rowSums(tcc.mtx) >= 5000
 tcc.mtx <- tcc.mtx[kept_bcs, kept_ecs]
 ecmap <- ecmap[kept_ecs, ]
 bcLabels <- as.factor(bcClusterMap[kept_bcs, ])
-
 
 ## ------------- Execute -------------
 
@@ -158,26 +174,3 @@ write.table(out_sig, file = paste0(outprefix, "_sigGenes.tsv"), quote = F,
 #final.umap$cell <- n
 #final.umap$cell <- as.factor(gsub("(ESC|NPC)_.*", "\\1", rownames(tcc.mtx)))
 #ggplot(final.umap, aes(UMAP1, UMAP2, col = cell)) + geom_point()
-
-##
-#tr <- read.delim("transcripts_quant/ESC_merged/transcripts.txt", header = F)
-## Second approach :: DEXSeq followed by lancaster p-value aggregation
-#library(DEXSeq)
-#exnames <- colnames(tcc.mtx)
-
-#sapply(unique(exnames), function(x){
-#  erep <- sum(grepl(x, exnames, fixed = TRUE))
-#  erep <- paste0("E", 1:erep)
-#  return(erep)
-#}) %>% unlist() -> featureID
-
-#cd <- t(tcc.mtx)
-#rownames(cd) <- exnames2
-
-#dds <- DEXSeqDataSet(countData = as.matrix(cd),
-#              sampleData = data.frame(row.names = rownames(tcc.mtx),
-#                                      condition = gsub("(.*)_[AGTC]*", "\\1", rownames(tcc.mtx))
-#                                      ),
-#              groupID = exnames,
-#              featureID = featureID)
-#dds %<>% estimateSizeFactors()
