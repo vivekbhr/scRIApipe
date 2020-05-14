@@ -7,15 +7,15 @@ library(parallel)
 library(nnet)
 library(lmtest)
 ## test Args
-Args <- c("transcripts_quant/TCCs_filtered_merged.mtx",
-          "transcripts_quant/barcodes_merged.txt",
-          "transcripts_quant/ECs_filtered_merged.txt",
-          "annotations/tr2g.tsv",
-          0.01, 
-          "bc_clusterMap.tsv",
-          20,
-          "../mLR_test/noregression2_sigGenes.tsv",
-          "NA")
+#Args <- c("transcripts_quant/TCCs_filtered_merged.mtx",
+#          "transcripts_quant/barcodes_merged.txt",
+#          "transcripts_quant/ECs_filtered_merged.txt",
+#          "annotations/tr2g.tsv",
+#          0.01,
+#          "bc_clusterMap.tsv",
+#          20,
+#          "../mLR_test/noregression2_sigGenes.tsv",
+#          "NA")
 
 ## ---------------- INPUT ARGS ---------------
 Args <- commandArgs(trailingOnly = TRUE)
@@ -44,7 +44,7 @@ if(regressVars == "NA") regressVars <- NA
 ## --------------- Functions ---------------------
 
 ## get DTU
-lrt_gene <- function(gene, tcc_mtx, labels, 
+lrt_gene <- function(gene, tcc_mtx, labels,
                      regress = NA, fit.type = "multinom") {
   # cell sum to regress
   cellSum <- rowSums(tcc_mtx)
@@ -66,14 +66,14 @@ lrt_gene <- function(gene, tcc_mtx, labels,
   }
   fmla_alt <- as.formula(fmla_alt)
   fmla_null <- as.formula(fmla_null)
-  
+
   if(fit.type == "glm") {
     ## glm fit
     glm.fit <- glm(fmla_alt, data = mtx, family = binomial)
     fit_null <- glm(fmla_null, data = mtx, family = binomial)
     lra <- anova(glm.fit, fit_null, test = "Chisq")
     pval <- lra$`Pr(>Chi)`[2]
-    
+
   } else {
     ## multinom fit
     fit <- nnet::multinom(fmla_alt, data = mtx)
@@ -81,7 +81,7 @@ lrt_gene <- function(gene, tcc_mtx, labels,
     lrt <- lrtest(fit, fit_null)
     pval <- lrt$`Pr(>Chisq)`[2]
   }
-  
+
   return(pval)
 }
 
@@ -118,6 +118,7 @@ kept_bcs <- rowSums(tcc.mtx) >= 5000
 tcc.mtx <- tcc.mtx[kept_bcs, kept_ecs]
 ecmap <- ecmap[kept_ecs, ]
 bcLabels <- as.factor(bcClusterMap[kept_bcs, ])
+
 
 ## ------------- Execute -------------
 
