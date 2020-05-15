@@ -5,11 +5,6 @@ options("scipen"=100, "digits"=4)
 library(Matrix)
 library(magrittr)
 
-#Args = c("test/ECtoGene_map.txt",
-#         "test/output.mtx",
-#         "test/output.ec.txt",
-#         "test/output.barcodes.txt",
-#         "test_gene")
 Args <- commandArgs(trailingOnly = TRUE)
 ec_to_gene <- Args[1]
 mtx <- Args[2]

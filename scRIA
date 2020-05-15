@@ -47,21 +47,24 @@ def commonYAMLandLogs(baseDir, args, callingScript):
     cluster_config = load_configfile(os.path.join(baseDir, "cluster_config.yaml"))
 
     snakemake_cmd = """
-                    TMPDIR={tempDir} PYTHONNOUSERSITE=True snakemake {snakemakeOptions} --directory {workingdir} --snakefile {snakefile} \
-                    --jobs {maxJobs} --configfile {configFile} --keep-going --latency-wait 60
+                    TMPDIR={tempDir} PYTHONNOUSERSITE=True snakemake {snakemakeOptions} \
+                    --directory {workingdir} --snakefile {snakefile} \
+                    --jobs {maxJobs} --configfile {configFile}  \
+                    --use-conda --conda-prefix {condadir} \
+                    --keep-going --latency-wait {latency_wait}
                     """.format(snakefile=os.path.join(baseDir, "Snakefile"),
                                maxJobs=args.maxJobs,
                                workingdir=args.outdir,
                                tempDir=args.tempDir,
-                               snakemakeOptions=str(args.snakemakeOptions or ''),
+                               condadir=args.conda_dir,
+                               latency_wait=cluster_config["latency_wait"],
+                               snakemakeOptions=str(args.snakemakeOptions or ' '),
                                configFile=os.path.join(args.outdir, 'scRIA_config.yaml')).split()
 
     if args.verbose:
         snakemake_cmd.append("--printshellcmds")
 
     if args.cluster:
-        snakemake_cmd += ["--use-conda"]
-        snakemake_cmd += ["--conda-prefix " + args.conda_dir]
         snakemake_cmd += ["--cluster-config",
                           os.path.join(baseDir, "cluster_config.yaml"),
                           "--cluster", "'" + cluster_config["cluster_cmd"], "'"]
@@ -187,6 +190,19 @@ def parse_args(defaults=None):
                          help="maximum number of concurrently submitted cluster jobs (cores if workflow is run locally) (default: '%(default)s')",
                          type=int,
                          default=10)
+
+    parser.add_argument("-idx", "--idxOnly",
+                         dest="idxOnly",
+                         required=False,
+                         default=False,
+                         action="store_true",
+                         help="generate only the index files for both normal run as well as for velocity run")
+
+    parser.add_argument("-a", "--annotation",
+                          dest="annotation",
+                          required=False,
+                          help="tsv file containing additional information to load into AnnData var e.g. gene name, chromosome or biotype",
+                          default=None)
 
     parser.add_argument("-h", "--help",
                          action="help",
