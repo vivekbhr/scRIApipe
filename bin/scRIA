@@ -223,7 +223,7 @@ def parse_args(defaults=None):
 
 def main():
     #baseDir, workflowDir, defaults = setDefaults(os.path.basename(__file__))
-    baseDir = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'scriapipe'))
+    baseDir = os.path.abspath(os.path.dirname(scRIA.__file__))
 
     # get command line arguments
     parser = parse_args()
