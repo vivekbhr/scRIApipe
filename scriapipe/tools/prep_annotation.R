@@ -27,6 +27,7 @@ message("Preparing annotations")
 gtf.txdb <- GenomicFeatures::makeTxDbFromGFF(gtf)
 GenomeInfoDb::seqlevelsStyle(gtf.txdb) <- "ensembl"
 AnnotationDbi::saveDb(gtf.txdb, file.path(outdir, "gtf.txdb"))
+gtf.txdb <- GenomeInfoDb::keepStandardChromosomes(gtf.txdb)
 
 ## write cDNA fasta
 message("Writing cDNA fasta")
