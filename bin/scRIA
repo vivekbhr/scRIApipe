@@ -12,6 +12,7 @@ import sys
 import textwrap
 import yaml
 import subprocess
+import scriapipe
 ### DEFINE FUNCTIONS TO LOAD AND RUN Workflow ###
 ########################################################
 
@@ -39,7 +40,7 @@ def commonYAMLandLogs(baseDir, args, callingScript):
         args.snakemakeOptions = ' '.join(args.snakemakeOptions)
 
     # save to configs.yaml in outdir
-    config = load_configfile(os.path.join(baseDir, "config.yaml"))
+    config = load_configfile(args.config)
     config.update(vars(args))  # This allows modifications of args after handling a user config file to still make it to the YAML given to snakemake!
     write_configfile(os.path.join(args.outdir, 'scRIA_config.yaml'), config)
 
@@ -134,12 +135,12 @@ def parse_args(defaults=None):
                           type=str,
                           required=True)
 
-    # parser.add_argument("-c", "--config",
-    #                       dest="config",
-    #                       metavar="STR",
-    #                       help="YAML file with workflow configuration",
-    #                       type=str,
-    #                       required=True)
+    parser.add_argument("-c", "--config",
+                           dest="config",
+                           metavar="STR",
+                           help="YAML file with workflow configuration",
+                           type=str,
+                           required=True)
 
     parser.add_argument("-o", "--outdir",
                           dest="outdir",
@@ -148,9 +149,8 @@ def parse_args(defaults=None):
 
     parser.add_argument("-t", "--tempDir",
                           dest="tempDir",
-                          action="store_true",
-                          help="Store temporary files in tmp folder located in the output folder",
-                          default=False)
+                          help="Directory to store temporary files. (default: '%(default)s')",
+                          default='/tmp/')
 
     parser.add_argument("-p", "--protocol",
                           dest="protocol",
@@ -223,19 +223,12 @@ def parse_args(defaults=None):
 
 def main():
     #baseDir, workflowDir, defaults = setDefaults(os.path.basename(__file__))
-    baseDir = os.path.abspath(os.path.dirname(scRIA.__file__))
+    baseDir = os.path.dirname(scriapipe.__file__)
 
     # get command line arguments
     parser = parse_args()
     args = parser.parse_args()
     args.outdir = os.path.abspath(args.outdir)
-
-    if args.tempDir:
-        args.tempDir = os.path.join(args.outdir, "tmp/")
-        if not os.path.exists(args.tempDir):
-            os.makedirs(args.tempDir)
-    else:
-        args.tempDir = "/tmp/"
 
     # Handle YAML and log files
     snakemake_cmd = commonYAMLandLogs(baseDir, args, __file__)

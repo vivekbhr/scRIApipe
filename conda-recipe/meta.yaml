@@ -1,13 +1,13 @@
 package:
-  name: "scriapipe"
-  version: "0.2"
+  name: scriapipe
+  version: 0.2
 
 source:
   path: ../
 
 build:
-  noarch: python
   number: 0
+  noarch: python
 
 requirements:
   host:
@@ -25,5 +25,5 @@ test:
 about:
   home: 'https://github.com/vivekbhr/scRIApipe'
   licence: MIT
-  summary: A workflow for identifying differantial transcript usage
+  summary: A workflow for identifying differantial transcript usage in single-cell data
   licence_file: LICENSE

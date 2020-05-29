@@ -15,8 +15,6 @@ genome_id: 'mm10'
 barcode_tsv: '/hpc/hub_oudenaarden/vbhardwaj/annotations/cell_barcodes_inhouse/celseq2.bc'
 ## GTF file (most important, better filter for pseudogenes etc first)
 input_gtf: '/hpc/hub_oudenaarden/tmakaske/projects/test/ash2l_level1-2.gtf'
-## a GENCODE formatted fasta file for transcripts, this file is used to get the gene symbols etc
-#cdna_fasta: 'Mus_musculus.GRCm38.cdna.all.fa'
 ## protocol name
 protocol:
 ## read length (for kallisto index)
