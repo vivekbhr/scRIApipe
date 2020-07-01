@@ -2,7 +2,7 @@
 
 single-cell **R**NA **I**soform **A**nalysis **Pipe**line
 
-**Author: @vivekbhr**
+**Author: Vivek Bhardwaj (@vivekbhr) and Thijs Makaske**
 
 ## DAG
 
