@@ -5,16 +5,16 @@ ext: '.fastq.gz'
 reads: ["_R1","_R2"]
 ## downsample fastq to the given number before alignment
 downsample:
-## Trim the reads? (must-do for raw VASA-seq)
+## Trim the reads?
 trim: False
 ## options for cutadapt
 trimmerOptions: "-A W{'10'}"
 ## UCSC ID of the genome (used to fetch tx sequences)
 genome_id: 'mm10'
 ## TSV of the barcodes (tsv file with col1 = some id, and col2 = barcode sequence)
-barcode_tsv: '/hpc/hub_oudenaarden/vbhardwaj/annotations/cell_barcodes_inhouse/celseq2.bc'
+barcode_tsv:
 ## GTF file (most important, better filter for pseudogenes etc first)
-input_gtf: '/hpc/hub_oudenaarden/tmakaske/projects/test/ash2l_level1-2.gtf'
+input_gtf: 
 ## protocol name
 protocol:
 ## read length (for kallisto index)

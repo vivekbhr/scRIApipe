@@ -8,26 +8,30 @@ single-cell **R**NA **I**soform **A**nalysis **Pipe**line
 
 ![](./workflow_dag.png)
 
-## How to run
+## Quick Installation
 
-1. Clone the repo in a suitable place. (we will call this path <workflow_dir>)
+From Conda:
 
 ```
-git clone https://github.com/vivekbhr/scRIApipe.git
+conda create -n scria -c vivekbhr -c bioconda -c conda-forge scriapipe
 ```
 
-2. Set up conda env for the workflow
+From GitHub:
 
 ```
 conda create -n scria python pip
 conda activate scria && pip install snakemake
+pip install git+https://github.com/vivekbhr/scRIApipe.git@master
 ```
 
-3. Move to the folder where you wan to run the workflow, and prepare the config.yaml
+## Configure paths
+
+The semi-permanent parameters to the workflow could be configured with a yaml file (config.yaml). Download [here](./scRIApipe/config.yaml)
+
+After conda install, move to the folder where you wan to run the workflow, and prepare the config.yaml
 
 ```
 cd <your output dir>
-cp <workflow_dir>/config.yaml .
 vim config.yaml ## now modify the paths as per your requirements
 ```
 
@@ -45,7 +49,7 @@ Additional parameters for the workflow can be accessed via --help
 scRIA --help
 ```
 
-4. Test-drive the workflow
+## Test-drive the workflow
 
 ```
 ## inside the output dir
