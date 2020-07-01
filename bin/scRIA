@@ -12,6 +12,7 @@ import sys
 import textwrap
 import yaml
 import subprocess
+import scriapipe
 ### DEFINE FUNCTIONS TO LOAD AND RUN Workflow ###
 ########################################################
 
@@ -78,6 +79,11 @@ def runAndCleanup(args, cmd):
     if args.verbose:
         print("\n{}\n".format(cmd))
 
+    if args.cluster:
+        dir = args.outdir + '/cluster_logs'
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+
     # write log file
     f = open(os.path.join(args.outdir, "scRIA.log"), "w")
     f.write(" ".join(sys.argv) + "\n\n")
@@ -130,11 +136,11 @@ def parse_args(defaults=None):
                           required=True)
 
     parser.add_argument("-c", "--config",
-                          dest="config",
-                          metavar="STR",
-                          help="YAML file with workflow configuration",
-                          type=str,
-                          required=True)
+                           dest="config",
+                           metavar="STR",
+                           help="YAML file with workflow configuration",
+                           type=str,
+                           required=True)
 
     parser.add_argument("-o", "--outdir",
                           dest="outdir",
@@ -217,17 +223,17 @@ def parse_args(defaults=None):
 
 def main():
     #baseDir, workflowDir, defaults = setDefaults(os.path.basename(__file__))
-    baseDir = os.path.dirname(__file__)
+    baseDir = os.path.dirname(scriapipe.__file__)
 
     # get command line arguments
     parser = parse_args()
     args = parser.parse_args()
     args.outdir = os.path.abspath(args.outdir)
+
     # Handle YAML and log files
     snakemake_cmd = commonYAMLandLogs(baseDir, args, __file__)
     # Run everything
     runAndCleanup(args, snakemake_cmd)
-
 
 if __name__ == "__main__":
     main()

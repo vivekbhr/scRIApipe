@@ -1,0 +1,6 @@
+include scriapipe/config.yaml
+include scriapipe/cluster_config.yaml
+include scriapipe/env.yaml
+include scriapipe/Snakefile
+recursive-include scriapipe/tools *
+recursive-include scriapipe/rules *

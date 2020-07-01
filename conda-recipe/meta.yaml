@@ -1,0 +1,29 @@
+package:
+  name: scriapipe
+  version: 0.2
+
+source:
+  path: ../
+
+build:
+  number: 0
+  noarch: python
+
+requirements:
+  host:
+    - python >=3
+  run:
+    - python >=3
+    - snakemake >=5.11.0
+    - pyyaml >=5.1
+    - coreutils
+
+test:
+  commands:
+    - scRIA --help
+
+about:
+  home: 'https://github.com/vivekbhr/scRIApipe'
+  licence: MIT
+  summary: A workflow for identifying differantial transcript usage in single-cell data
+  licence_file: LICENSE
