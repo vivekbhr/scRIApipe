@@ -42,14 +42,14 @@ UCSC ID is, for example "mm10" (mouse) or "hg38" (human)
 Additional parameters for the workflow can be accessed via --help
 
 ```
-<workflow_dir>/scRIA --help
+scRIA --help
 ```
 
 4. Test-drive the workflow
 
 ```
 ## inside the output dir
-<workflow_dir>/scRIA -i <fastq_folder> -o . -c <your>config.yaml -j <jobs> -s ' -np'
+scRIA -i <fastq_folder> -o . -c <your>config.yaml -j <jobs> -s ' -np'
 ```
 
 ## 4. Submission parameters
@@ -83,5 +83,3 @@ Major outputs of the workflow are:
   - Transcript compatibility counts (TCC) in folder `<outdir>/transcripts_quant/<sample>/eq_counts/tcc.mtx`
   - Gene counts in folder `<outdir>/transcripts_quant/<sample>/gene_counts/gene.mtx`
   - RNA velocity output in folder `<outdir>/velocity_output` (normal/filtered loom files, velocity plots)
-
-  ![](./velocity-stream_louvain_example.png)
