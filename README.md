@@ -63,6 +63,23 @@ scRIA -i <fastq_folder> -o . -c <your>config.yaml -j <jobs> -s ' -np'
 
   - cluster configuration, such as memory and cluster submission command are placed in [cluster_config.yaml](./cluster_config.yaml), and can be modified to suite the users internal infrastructure.
 
+To find the currently active cluster-config file, run the following:
+
+```
+conda activate scria
+which scRIA
+```
+This shows the path to scRIA binary, usually it's like:
+
+```
+/path/to/miniconda3/envs/scria/bin/scRIA
+```
+You can find the cluster-config here:
+
+```
+/path/to/miniconda3/envs/scria/lib/python<version>/site-packages/scriapipe/cluster_config.yaml
+```
+
 #### Dry-run
 In order to just test what the workflow would do, use the command `-s ' -np' `
 
