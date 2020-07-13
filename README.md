@@ -1,5 +1,7 @@
 # scRIApipe
 
+[![DOI](https://zenodo.org/badge/204445222.svg)](https://zenodo.org/badge/latestdoi/204445222)
+
 single-cell **R**NA **I**soform **A**nalysis **Pipe**line
 
 **Author: Vivek Bhardwaj (@vivekbhr) and Thijs Makaske**
