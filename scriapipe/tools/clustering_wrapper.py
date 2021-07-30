@@ -291,6 +291,28 @@ def clustercells(adata, outdir, group_keys):
 
     return(adata)
 
+## get mean gene counts by group of cells (using louvain/celltype)
+def grouped_obs_mean(adata, group_key, layer=None, gene_symbols=None):
+    if layer is not None:
+        getX = lambda x: x.layers[layer]
+    else:
+        getX = lambda x: x.X
+    if gene_symbols is not None:
+        new_idx = adata.var[idx]
+    else:
+        new_idx = adata.var_names
+
+    grouped = adata.obs.groupby(group_key)
+    out = pd.DataFrame(
+        np.zeros((adata.shape[1], len(grouped)), dtype=np.float64),
+        columns=list(grouped.groups.keys()),
+        index=adata.var_names
+    )
+
+    for group, idx in grouped.indices.items():
+        X = getX(adata[idx])
+        out[group] = np.ravel(X.mean(axis=0, dtype=np.float64))
+    return out
 
 # parse arguments from commandline
 def parse_args(defaults=None):
