@@ -24,7 +24,9 @@ import math
 # for plots
 import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib.backends.backend_pdf
+import matplotlib.backends.backend_pdf as pdf
+import seaborn as sns
+
 
 # load matrix as AnnData object
 def get_matrix(countFile, outdir, barcodes, varlist, groups, annotation, type):
@@ -86,7 +88,7 @@ def get_matrix(countFile, outdir, barcodes, varlist, groups, annotation, type):
 # preprocess tcc/gene matrix
 def preprocess(adata, outdir,  highlyvar):
     # open pdf file for plots
-    pdf = matplotlib.backends.backend_pdf.PdfPages(outdir+"/preprocess_stats.pdf")
+    pdf = pdf.PdfPages(outdir+"/preprocess_stats.pdf")
     plt.figure(figsize=(10,5))
 
     # variables might be nice to expose these variables
@@ -243,7 +245,7 @@ def preprocess(adata, outdir,  highlyvar):
 # cluster cells use louvain clustering
 def clustercells(adata, outdir, group_keys):
     # open pdf file for plots
-    pdf = matplotlib.backends.backend_pdf.PdfPages(outdir+"/clustering.pdf")
+    pdf = pdf.PdfPages(outdir+"/clustering.pdf")
     plt.figure(figsize=(10,5))
 
     # do the clustering
@@ -313,6 +315,20 @@ def grouped_obs_mean(adata, group_key, layer=None, gene_symbols=None):
         X = getX(adata[idx])
         out[group] = np.ravel(X.mean(axis=0, dtype=np.float64))
     return out
+
+## plot a reference genelist (celltype->gene, dataframe) onto a query gene counts (cluster->gene, dataframe)
+## in an effort to annotate it
+def plot_genes_on_grouped_means(query, ref, outfile):
+    with pdf.PdfPages(outfile) as pp:
+        for i in list(ref.columns):
+            df = query[query.index.isin(list(ref[str(i)]))]
+            sorted_index = df.median().sort_values().index
+            df = df[sorted_index]
+            plt.figure()
+            ax = sns.boxplot(data=df, showfliers = False).set_title(str(i))
+            ax = sns.swarmplot(data=df, color=".25")
+            ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
+            pp.savefig(ax.figure, bbox_inches='tight')
 
 # parse arguments from commandline
 def parse_args(defaults=None):
